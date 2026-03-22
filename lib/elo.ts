@@ -158,7 +158,7 @@ export function applyMatchResults(
         pts: p.pts + placePts,
         lastGain: sessionGain,
         lms: p.lms + lmsBonus,
-        prevRank: null, // will be computed at export time
+        prevRank: p.prevRank, // preserved; overwritten in handleRecordMatch
         streak: p.streak + 1,
       });
     }

@@ -75,6 +75,14 @@ export default function Rankings({ players, settings, sessions }: RankingsProps)
     return list;
   }, [players, sortKey, sortDir]);
 
+  // Compute pts-based rank for each player (used by Chg column)
+  const ptsRankMap = useMemo(() => {
+    const byPts = [...players].sort((a, b) => b.pts - a.pts || b.elo - a.elo);
+    const map = new Map<number, number>();
+    byPts.forEach((p, idx) => map.set(p.id, idx + 1));
+    return map;
+  }, [players]);
+
   const totalPlayers = players.length;
   const totalSessions = sessions.length;
   const avgElo =
@@ -238,28 +246,32 @@ export default function Rankings({ players, settings, sessions }: RankingsProps)
           {player.lms > 0 ? player.lms : '—'}
         </span>
 
-        {/* Change */}
-        <span
-          className="text-center font-mono text-sm"
-          style={{
-            color:
-              player.prevRank == null
-                ? '#3d5270'
-                : player.prevRank > rank
-                ? '#2ecc71'
-                : player.prevRank < rank
-                ? '#ff4757'
-                : '#3d5270',
-          }}
-        >
-          {player.prevRank == null
-            ? '—'
-            : player.prevRank > rank
-            ? `+${player.prevRank - rank}`
-            : player.prevRank < rank
-            ? `${player.prevRank - rank}`
-            : '0'}
-        </span>
+        {/* Change — always based on pts ranking, regardless of current sort */}
+        {(() => {
+          const curPtsRank = ptsRankMap.get(player.id) ?? rank;
+          const diff = player.prevRank != null ? player.prevRank - curPtsRank : null;
+          return (
+            <span
+              className="text-center font-mono text-sm"
+              style={{
+                color:
+                  diff == null || diff === 0
+                    ? '#3d5270'
+                    : diff > 0
+                    ? '#2ecc71'
+                    : '#ff4757',
+              }}
+            >
+              {diff == null
+                ? '—'
+                : diff > 0
+                ? `+${diff}`
+                : diff === 0
+                ? '0'
+                : `${diff}`}
+            </span>
+          );
+        })()}
 
         {/* Placements */}
         <div className="flex items-center justify-center gap-3">

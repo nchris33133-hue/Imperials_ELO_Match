@@ -119,13 +119,18 @@ export default function Home() {
         ...session,
         preMatchPlayers: prev.players.map(p => ({ ...p })),
       };
+      // Compute each player's current rank by pts (for Chg column)
+      const prevSorted = [...prev.players].sort((a, b) => b.pts - a.pts || b.elo - a.elo);
+      const prevRankMap = new Map<number, number>();
+      prevSorted.forEach((p, idx) => prevRankMap.set(p.id, idx + 1));
+
       // Merge updated players into the full roster
       const playerMap = new Map(updatedPlayers.map(p => [p.id, p]));
       const mergedPlayers = prev.players.map(p => {
         const updated = playerMap.get(p.id);
-        if (updated) return updated; // streak already incremented in applyMatchResults
-        // Reset streak for non-participants
-        return { ...p, streak: 0 };
+        if (updated) return { ...updated, prevRank: prevRankMap.get(p.id) ?? null };
+        // Reset streak for non-participants, keep their prevRank
+        return { ...p, streak: 0, prevRank: prevRankMap.get(p.id) ?? null };
       });
       return {
         ...prev,
