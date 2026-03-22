@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import type { Player, Settings } from '@/lib/types';
+import type { Player, Session, Settings } from '@/lib/types';
 
 interface RosterProps {
   players: Player[];
   settings: Settings;
   onUpdatePlayers: (players: Player[]) => void;
+  onRenamePlayer: (oldName: string, newName: string) => void;
   nextId: number;
   onUpdateNextId: (id: number) => void;
 }
@@ -15,12 +16,15 @@ export default function Roster({
   players,
   settings,
   onUpdatePlayers,
+  onRenamePlayer,
   nextId,
   onUpdateNextId,
 }: RosterProps) {
   const [name, setName] = useState('');
   const [gender, setGender] = useState<'M' | 'F'>('M');
   const [vetLevel, setVetLevel] = useState<0 | 1 | 2>(0);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editName, setEditName] = useState('');
 
   const eloMap: Record<0 | 1 | 2, number> = {
     0: settings.baseElo,
@@ -67,6 +71,22 @@ export default function Roster({
     if (!player) return;
     if (!window.confirm(`Delete player "${player.name}"?`)) return;
     onUpdatePlayers(players.filter((p) => p.id !== id));
+  };
+
+  const handleRename = (id: number) => {
+    const trimmed = editName.trim();
+    const player = players.find(p => p.id === id);
+    if (!trimmed || !player || trimmed === player.name) {
+      setEditingId(null);
+      return;
+    }
+    // Check for duplicate names
+    if (players.some(p => p.id !== id && p.name.toLowerCase() === trimmed.toLowerCase())) {
+      window.alert('A player with that name already exists.');
+      return;
+    }
+    onRenamePlayer(player.name, trimmed);
+    setEditingId(null);
   };
 
   const handleGenderChange = (id: number, newGender: 'M' | 'F') => {
@@ -221,7 +241,37 @@ export default function Roster({
                   style={{ borderBottom: '1px solid #1e2e48' }}
                 >
                   <td className="px-4 py-3" style={{ color: '#c8d8ec' }}>
-                    {player.name}
+                    {editingId === player.id ? (
+                      <input
+                        type="text"
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') handleRename(player.id);
+                          if (e.key === 'Escape') setEditingId(null);
+                        }}
+                        onBlur={() => handleRename(player.id)}
+                        autoFocus
+                        className="rounded px-2 py-1 text-sm outline-none focus:ring-1"
+                        style={{
+                          backgroundColor: '#121b2e',
+                          border: '1px solid #F5C518',
+                          color: '#c8d8ec',
+                          width: '100%',
+                        }}
+                      />
+                    ) : (
+                      <span
+                        onClick={() => {
+                          setEditingId(player.id);
+                          setEditName(player.name);
+                        }}
+                        style={{ cursor: 'pointer' }}
+                        title="Click to edit name"
+                      >
+                        {player.name}
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <select

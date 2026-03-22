@@ -12,6 +12,14 @@ import SettingsPanel from '@/components/Settings';
 import seedPlayersRaw from '@/data/players.json';
 import sessionsData from '@/data/history.json';
 
+function renameKey(obj: Record<string, number>, oldKey: string, newKey: string): Record<string, number> {
+  const result: Record<string, number> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    result[k === oldKey ? newKey : k] = v;
+  }
+  return result;
+}
+
 const tabs = [
   { key: 'rankings', label: '🏆 Rankings' },
   { key: 'roster', label: '👥 Roster' },
@@ -53,6 +61,33 @@ export default function Home() {
 
   const handleUpdateSettings = useCallback((settings: Settings) => {
     setState(prev => prev ? { ...prev, settings } : prev);
+  }, []);
+
+  const handleRenamePlayer = useCallback((oldName: string, newName: string) => {
+    setState(prev => {
+      if (!prev) return prev;
+      // Update player name
+      const players = prev.players.map(p =>
+        p.name === oldName ? { ...p, name: newName } : p
+      );
+      // Update all session references
+      const sessions = prev.sessions.map(s => {
+        const teams = s.teams.map(t => ({
+          ...t,
+          players: t.players.map(n => n === oldName ? newName : n),
+        }));
+        const eloDeltas = s.eloDeltas ? renameKey(s.eloDeltas, oldName, newName) : s.eloDeltas;
+        const pointGains = s.pointGains ? renameKey(s.pointGains, oldName, newName) : s.pointGains;
+        const lms = s.lms
+          ? s.lms.map(n => n === oldName ? newName : n) as [string | null, string | null, string | null, string | null]
+          : s.lms;
+        const preMatchPlayers = s.preMatchPlayers
+          ? s.preMatchPlayers.map(p => p.name === oldName ? { ...p, name: newName } : p)
+          : s.preMatchPlayers;
+        return { ...s, teams, eloDeltas, pointGains, lms, preMatchPlayers };
+      });
+      return { ...prev, players, sessions };
+    });
   }, []);
 
   const handleRecordMatch = useCallback((updatedPlayers: Player[], session: Session) => {
@@ -151,6 +186,7 @@ export default function Home() {
           players={state.players}
           settings={state.settings}
           onUpdatePlayers={handleUpdatePlayers}
+          onRenamePlayer={handleRenamePlayer}
           nextId={state.nextId}
           onUpdateNextId={handleUpdateNextId}
         />
