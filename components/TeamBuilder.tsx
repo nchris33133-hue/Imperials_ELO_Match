@@ -158,6 +158,48 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
     return tags;
   };
 
+  // Players not currently in any team (available to add)
+  const availablePlayers = useMemo(() => {
+    if (!teams) return [];
+    const inTeam = new Set(teams.flat().map(p => p.id));
+    return players.filter(p => !inTeam.has(p.id));
+  }, [teams, players]);
+
+  const handleMovePlayer = (playerId: number, fromTeam: number, toTeam: number) => {
+    if (!teams || fromTeam === toTeam) return;
+    const player = teams[fromTeam].find(p => p.id === playerId);
+    if (!player) return;
+    setTeams(prev => {
+      if (!prev) return prev;
+      const next = prev.map(t => [...t]);
+      next[fromTeam] = next[fromTeam].filter(p => p.id !== playerId);
+      next[toTeam] = [...next[toTeam], player];
+      return next;
+    });
+  };
+
+  const handleRemoveFromTeam = (playerId: number, teamIndex: number) => {
+    if (!teams) return;
+    setTeams(prev => {
+      if (!prev) return prev;
+      const next = prev.map(t => [...t]);
+      next[teamIndex] = next[teamIndex].filter(p => p.id !== playerId);
+      return next;
+    });
+  };
+
+  const handleAddToTeam = (playerId: number, teamIndex: number) => {
+    if (!teams) return;
+    const player = players.find(p => p.id === playerId);
+    if (!player) return;
+    setTeams(prev => {
+      if (!prev) return prev;
+      const next = prev.map(t => [...t]);
+      next[teamIndex] = [...next[teamIndex], player];
+      return next;
+    });
+  };
+
   // Compute summary data when teams exist
   const summary = useMemo(() => {
     if (!teams) return null;
@@ -639,10 +681,78 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
                                 {delta > 0 ? '+' : ''}{delta}
                               </span>
                             )}
+                            {!matchMode && teams && teams.length > 1 && (
+                              <>
+                                <select
+                                  value=""
+                                  onChange={(e) => {
+                                    const toTeam = Number(e.target.value);
+                                    if (!isNaN(toTeam)) handleMovePlayer(p.id, i, toTeam);
+                                  }}
+                                  className="text-[10px] rounded px-1 py-0.5 outline-none"
+                                  style={{
+                                    backgroundColor: '#121b2e',
+                                    border: '1px solid #1e2e48',
+                                    color: '#3d5270',
+                                    width: 50,
+                                  }}
+                                  title="Move to team"
+                                >
+                                  <option value="">Move</option>
+                                  {teams.map((_, ti) =>
+                                    ti !== i ? (
+                                      <option key={ti} value={ti}>
+                                        {teamNames[ti] || `Team ${ti + 1}`}
+                                      </option>
+                                    ) : null
+                                  )}
+                                </select>
+                                <button
+                                  onClick={() => handleRemoveFromTeam(p.id, i)}
+                                  className="text-[10px] font-bold rounded px-1.5 py-0.5 transition-opacity hover:opacity-80"
+                                  style={{
+                                    backgroundColor: 'rgba(255,71,87,0.15)',
+                                    color: '#ff4757',
+                                    border: '1px solid rgba(255,71,87,0.3)',
+                                  }}
+                                  title="Remove from team"
+                                >
+                                  ✕
+                                </button>
+                              </>
+                            )}
                           </div>
                         </div>
                       );
                     })}
+
+                    {/* Add player to team */}
+                    {!matchMode && availablePlayers.length > 0 && (
+                      <div className="px-4 py-2" style={{ borderTop: '1px solid #1e2e48' }}>
+                        <select
+                          value=""
+                          onChange={(e) => {
+                            const pid = Number(e.target.value);
+                            if (!isNaN(pid)) handleAddToTeam(pid, i);
+                          }}
+                          className="w-full text-xs rounded px-2 py-1.5 outline-none"
+                          style={{
+                            backgroundColor: '#121b2e',
+                            border: '1px solid #1e2e48',
+                            color: '#3d5270',
+                          }}
+                        >
+                          <option value="">+ Add player...</option>
+                          {availablePlayers
+                            .sort((a, b) => a.name.localeCompare(b.name))
+                            .map(p => (
+                              <option key={p.id} value={p.id}>
+                                {p.name} ({p.gender}, {p.elo})
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
