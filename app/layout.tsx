@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Bebas_Neue, IBM_Plex_Mono, DM_Sans } from "next/font/google";
 import "./globals.css";
 
@@ -23,6 +23,12 @@ const dmSans = DM_Sans({
 export const metadata: Metadata = {
   title: "Vienna Imperials ELO",
   description: "ELO ranking and team balancing tool for the Vienna Imperials Dodgeball Club",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
 };
 
 export default function RootLayout({

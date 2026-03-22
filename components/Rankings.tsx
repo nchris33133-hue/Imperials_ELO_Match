@@ -122,6 +122,126 @@ export default function Rankings({ players, settings, sessions }: RankingsProps)
     userSelect: 'none',
   });
 
+  function getChgData(player: Player, _displayRank: number) {
+    const curPtsRank = ptsRankMap.get(player.id) ?? _displayRank;
+    const diff = player.prevRank != null ? player.prevRank - curPtsRank : null;
+    return {
+      diff,
+      color: diff == null || diff === 0 ? '#3d5270' : diff > 0 ? '#2ecc71' : '#ff4757',
+      label: diff == null ? '—' : diff > 0 ? `+${diff}` : diff === 0 ? '0' : `${diff}`,
+    };
+  }
+
+  /* ── Mobile card row ── */
+  function renderMobileRow(player: Player, rank: number) {
+    const tier = getTier(player.elo);
+    const tierColor = TIER_COLORS[tier.label] || '#3d5270';
+    const provisional = isProvisional(player, settings);
+    const vet = vetLevel(player);
+    const delta = player.lastDelta;
+    const chg = getChgData(player, rank);
+
+    return (
+      <div
+        key={player.id}
+        className="px-3 py-3 border-b"
+        style={{ borderColor: '#1e2e48', backgroundColor: '#0c1220' }}
+      >
+        {/* Row 1: Rank, Name, ELO */}
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="font-mono text-xs shrink-0" style={{ color: '#3d5270' }}>
+              #{rank}
+            </span>
+            <div
+              className="w-2 h-2 rounded-full shrink-0"
+              style={{ backgroundColor: tierColor }}
+            />
+            <span className="text-sm font-medium truncate" style={{ color: '#c8d8ec' }}>
+              {player.name}
+            </span>
+            <span
+              className="text-[10px] font-bold px-1 py-0.5 rounded shrink-0"
+              style={{
+                backgroundColor: player.gender === 'M' ? 'rgba(0,180,216,0.15)' : 'rgba(255,71,87,0.15)',
+                color: player.gender === 'M' ? '#00b4d8' : '#ff4757',
+              }}
+            >
+              {player.gender}
+            </span>
+            {provisional && (
+              <span className="text-[9px] font-bold px-1 py-0.5 rounded shrink-0" style={{ backgroundColor: 'rgba(255,71,87,0.15)', color: '#ff4757' }}>
+                PROV
+              </span>
+            )}
+            {!provisional && vet === 2 && (
+              <span className="text-[9px] font-bold px-1 py-0.5 rounded shrink-0" style={{ backgroundColor: 'rgba(204,128,255,0.15)', color: '#cc80ff' }}>
+                S·VET
+              </span>
+            )}
+            {!provisional && vet === 1 && (
+              <span className="text-[9px] font-bold px-1 py-0.5 rounded shrink-0" style={{ backgroundColor: 'rgba(245,197,24,0.15)', color: '#F5C518' }}>
+                VET
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0 ml-2">
+            <span className="text-xs font-semibold" style={{ color: tierColor }}>
+              {tier.label}
+            </span>
+          </div>
+        </div>
+
+        {/* Row 2: Stats grid */}
+        <div className="grid grid-cols-4 gap-x-2 gap-y-1 text-xs">
+          <div className="flex flex-col items-center">
+            <span style={{ color: '#3d5270' }}>ELO</span>
+            <span className="font-mono font-semibold" style={{ color: '#c8d8ec' }}>{player.elo}</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span style={{ color: '#3d5270' }}>Pts</span>
+            <span className="font-mono" style={{ color: player.pts > 0 ? '#2ecc71' : '#3d5270' }}>
+              {player.pts > 0 ? player.pts : '—'}
+            </span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span style={{ color: '#3d5270' }}>±Delta</span>
+            <span className="font-mono" style={{ color: delta === null || delta === 0 ? '#3d5270' : delta > 0 ? '#2ecc71' : '#ff4757' }}>
+              {delta === null ? '—' : delta > 0 ? `+${delta}` : delta === 0 ? '0' : `${delta}`}
+            </span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span style={{ color: '#3d5270' }}>Chg</span>
+            <span className="font-mono" style={{ color: chg.color }}>{chg.label}</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span style={{ color: '#3d5270' }}>GP</span>
+            <span className="font-mono" style={{ color: '#c8d8ec' }}>{player.games}</span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span style={{ color: '#3d5270' }}>Gain</span>
+            <span className="font-mono" style={{ color: player.lastGain != null && player.lastGain > 0 ? '#2ecc71' : '#3d5270' }}>
+              {player.lastGain != null ? (player.lastGain > 0 ? `+${player.lastGain}` : `${player.lastGain}`) : '—'}
+            </span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span style={{ color: '#3d5270' }}>Strk</span>
+            <span className="font-mono" style={{ color: player.streak > 0 ? '#F5C518' : '#3d5270' }}>
+              {player.streak > 0 ? player.streak : '—'}
+            </span>
+          </div>
+          <div className="flex flex-col items-center">
+            <span style={{ color: '#3d5270' }}>BP</span>
+            <span className="font-mono" style={{ color: player.lms > 0 ? '#cc80ff' : '#3d5270' }}>
+              {player.lms > 0 ? player.lms : '—'}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Desktop grid row ── */
   function renderRow(player: Player, rank: number) {
     const tier = getTier(player.elo);
     const tierColor = TIER_COLORS[tier.label] || '#3d5270';
@@ -248,27 +368,10 @@ export default function Rankings({ players, settings, sessions }: RankingsProps)
 
         {/* Change — always based on pts ranking, regardless of current sort */}
         {(() => {
-          const curPtsRank = ptsRankMap.get(player.id) ?? rank;
-          const diff = player.prevRank != null ? player.prevRank - curPtsRank : null;
+          const chg = getChgData(player, rank);
           return (
-            <span
-              className="text-center font-mono text-sm"
-              style={{
-                color:
-                  diff == null || diff === 0
-                    ? '#3d5270'
-                    : diff > 0
-                    ? '#2ecc71'
-                    : '#ff4757',
-              }}
-            >
-              {diff == null
-                ? '—'
-                : diff > 0
-                ? `+${diff}`
-                : diff === 0
-                ? '0'
-                : `${diff}`}
+            <span className="text-center font-mono text-sm" style={{ color: chg.color }}>
+              {chg.label}
             </span>
           );
         })()}
@@ -311,19 +414,64 @@ export default function Rankings({ players, settings, sessions }: RankingsProps)
     );
   }
 
+  /* ── Sort controls for mobile ── */
+  function renderMobileSortControls() {
+    const keys: SortKey[] = ['elo', 'pts', 'games', 'streak', 'lms', 'name'];
+    return (
+      <div className="flex gap-1.5 overflow-x-auto pb-2 lg:hidden">
+        {keys.map(key => (
+          <button
+            key={key}
+            onClick={() => handleSort(key)}
+            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors"
+            style={{
+              backgroundColor: sortKey === key ? 'rgba(245,197,24,0.15)' : '#0c1220',
+              color: sortKey === key ? '#F5C518' : '#3d5270',
+              border: `1px solid ${sortKey === key ? 'rgba(245,197,24,0.3)' : '#1e2e48'}`,
+            }}
+          >
+            {SORT_LABELS[key]}{sortKey === key ? (sortDir === 'desc' ? ' ▼' : ' ▲') : ''}
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  /* ── Mobile tier divider ── */
+  function renderMobileTierDivider(tierLabel: string) {
+    const tierColor = TIER_COLORS[tierLabel] || '#3d5270';
+    return (
+      <div
+        className="flex items-center gap-2 px-3 py-2 border-b"
+        style={{ borderColor: '#1e2e48', backgroundColor: '#070a13' }}
+      >
+        <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: tierColor }} />
+        <span className="text-xs font-bold uppercase tracking-widest" style={{ color: tierColor }}>
+          {tierLabel}
+        </span>
+        <div className="flex-1 h-px" style={{ backgroundColor: tierColor, opacity: 0.25 }} />
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full max-w-6xl mx-auto px-4 py-8" style={{ color: '#c8d8ec' }}>
+    <div className="w-full max-w-6xl mx-auto px-0 sm:px-4 py-4 sm:py-8" style={{ color: '#c8d8ec' }}>
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-8 px-3 sm:px-0">
         <StatCard label="Total Players" value={totalPlayers} color="#00b4d8" />
         <StatCard label="Total Sessions" value={totalSessions} color="#2ecc71" />
         <StatCard label="Average ELO" value={avgElo} color="#F5C518" />
         <StatCard label="Top ELO" value={topElo} color="#cc80ff" />
       </div>
 
-      {/* Rankings Table */}
+      {/* Mobile sort controls */}
+      <div className="px-3 sm:px-0 mb-3">
+        {renderMobileSortControls()}
+      </div>
+
+      {/* ── Desktop Table (hidden on mobile) ── */}
       <div
-        className="rounded-xl overflow-hidden border"
+        className="rounded-xl overflow-hidden border hidden lg:block"
         style={{ backgroundColor: '#0c1220', borderColor: '#1e2e48' }}
       >
         {/* Table Header */}
@@ -397,23 +545,38 @@ export default function Rankings({ players, settings, sessions }: RankingsProps)
           : sorted.map((player, idx) => renderRow(player, idx + 1))}
       </div>
 
-      {/* Legend Footer */}
+      {/* ── Mobile Card List (hidden on desktop) ── */}
       <div
-        className="mt-6 rounded-xl border px-6 py-4"
+        className="rounded-xl overflow-hidden border lg:hidden mx-3 sm:mx-0"
         style={{ backgroundColor: '#0c1220', borderColor: '#1e2e48' }}
       >
-        <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: '#3d5270' }}>
+        {showTierGroups && groupedByTier
+          ? groupedByTier.map((group) => (
+              <div key={group.tier}>
+                {renderMobileTierDivider(group.tier)}
+                {group.players.map(({ player, rank }) => renderMobileRow(player, rank))}
+              </div>
+            ))
+          : sorted.map((player, idx) => renderMobileRow(player, idx + 1))}
+      </div>
+
+      {/* Legend Footer */}
+      <div
+        className="mt-4 sm:mt-6 rounded-xl border px-4 sm:px-6 py-3 sm:py-4 mx-3 sm:mx-0"
+        style={{ backgroundColor: '#0c1220', borderColor: '#1e2e48' }}
+      >
+        <p className="text-xs font-semibold uppercase tracking-wider mb-2 sm:mb-3" style={{ color: '#3d5270' }}>
           Legend
         </p>
-        <div className="flex flex-wrap gap-x-8 gap-y-3">
+        <div className="flex flex-wrap gap-x-4 sm:gap-x-8 gap-y-2 sm:gap-y-3">
           {/* Tier Colors */}
           {TIER_ORDER.map((tier) => (
-            <div key={tier} className="flex items-center gap-2">
+            <div key={tier} className="flex items-center gap-1.5 sm:gap-2">
               <div
-                className="w-2.5 h-2.5 rounded-full"
+                className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full"
                 style={{ backgroundColor: TIER_COLORS[tier] }}
               />
-              <span className="text-xs" style={{ color: '#c8d8ec' }}>
+              <span className="text-[10px] sm:text-xs" style={{ color: '#c8d8ec' }}>
                 {tier}
               </span>
             </div>
@@ -422,36 +585,36 @@ export default function Rankings({ players, settings, sessions }: RankingsProps)
           <div className="w-px h-4 self-center" style={{ backgroundColor: '#1e2e48' }} />
 
           {/* Status Tags */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <span
-              className="text-[10px] font-bold px-2 py-0.5 rounded"
+              className="text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded"
               style={{ backgroundColor: 'rgba(255,71,87,0.15)', color: '#ff4757' }}
             >
               PROV
             </span>
-            <span className="text-xs" style={{ color: '#3d5270' }}>
+            <span className="text-[10px] sm:text-xs" style={{ color: '#3d5270' }}>
               Provisional
             </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <span
-              className="text-[10px] font-bold px-2 py-0.5 rounded"
+              className="text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded"
               style={{ backgroundColor: 'rgba(245,197,24,0.15)', color: '#F5C518' }}
             >
               VET
             </span>
-            <span className="text-xs" style={{ color: '#3d5270' }}>
+            <span className="text-[10px] sm:text-xs" style={{ color: '#3d5270' }}>
               Veteran
             </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <span
-              className="text-[10px] font-bold px-2 py-0.5 rounded"
+              className="text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded"
               style={{ backgroundColor: 'rgba(204,128,255,0.15)', color: '#cc80ff' }}
             >
               S·VET
             </span>
-            <span className="text-xs" style={{ color: '#3d5270' }}>
+            <span className="text-[10px] sm:text-xs" style={{ color: '#3d5270' }}>
               Super Veteran
             </span>
           </div>
@@ -464,13 +627,13 @@ export default function Rankings({ players, settings, sessions }: RankingsProps)
 function StatCard({ label, value, color }: { label: string; value: number; color: string }) {
   return (
     <div
-      className="rounded-xl border px-5 py-4"
+      className="rounded-xl border px-3 sm:px-5 py-3 sm:py-4"
       style={{ backgroundColor: '#0c1220', borderColor: '#1e2e48' }}
     >
-      <p className="text-xs font-medium mb-1" style={{ color: '#3d5270' }}>
+      <p className="text-[10px] sm:text-xs font-medium mb-1" style={{ color: '#3d5270' }}>
         {label}
       </p>
-      <p className="text-2xl font-bold font-mono" style={{ color }}>
+      <p className="text-xl sm:text-2xl font-bold font-mono" style={{ color }}>
         {value}
       </p>
     </div>

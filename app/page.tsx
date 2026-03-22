@@ -177,14 +177,14 @@ export default function Home() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6">
+    <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
       {/* Header */}
-      <header className="mb-6 flex items-center justify-between">
+      <header className="mb-4 sm:mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-wide" style={{ fontFamily: 'var(--font-heading)', color: '#F5C518' }}>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-wide" style={{ fontFamily: 'var(--font-heading)', color: '#F5C518' }}>
             VIENNA IMPERIALS
           </h1>
-          <p className="text-dm text-sm">ELO Ranking & Team Builder</p>
+          <p className="text-dm text-xs sm:text-sm">ELO Ranking & Team Builder</p>
         </div>
         <div className="flex items-center gap-2">
           <div
@@ -193,19 +193,19 @@ export default function Home() {
               backgroundColor: syncStatus === 'synced' ? '#2ecc71' : syncStatus === 'local' ? '#F5C518' : '#ff4757',
             }}
           />
-          <span className="text-xs" style={{ color: '#3d5270' }}>
+          <span className="text-xs hidden sm:inline" style={{ color: '#3d5270' }}>
             {syncStatus === 'synced' ? 'Synced' : syncStatus === 'local' ? 'Local only' : 'Offline'}
           </span>
         </div>
       </header>
 
       {/* Tab Navigation */}
-      <nav className="flex gap-1 mb-6 border-b border-bo pb-0 overflow-x-auto">
+      <nav className="flex gap-0.5 sm:gap-1 mb-4 sm:mb-6 border-b border-bo pb-0 overflow-x-auto -mx-3 px-3 sm:mx-0 sm:px-0">
         {tabs.map(tab => (
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px ${
+            className={`px-2.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px ${
               activeTab === tab.key
                 ? 'border-acc text-acc'
                 : 'border-transparent text-dm hover:text-tx'

@@ -135,10 +135,9 @@ export default function History({ sessions, seedCount, onRollback }: HistoryProp
                   })}
                 </span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                <span style={{ fontSize: 12, color: '#3d5270' }}>
-                  {teamCount} team{teamCount !== 1 ? 's' : ''} &middot; {totalPlayers} player
-                  {totalPlayers !== 1 ? 's' : ''}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                <span style={{ fontSize: 11, color: '#3d5270' }}>
+                  {teamCount}T &middot; {totalPlayers}P
                 </span>
                 <span
                   style={{
@@ -156,12 +155,12 @@ export default function History({ sessions, seedCount, onRollback }: HistoryProp
 
             {/* Expanded content */}
             {expanded && (
-              <div style={{ padding: '4px 18px 18px' }}>
+              <div style={{ padding: '4px 12px 14px' }}>
                 <div
                   style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-                    gap: 10,
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+                    gap: 8,
                   }}
                 >
                   {rankedTeams.map((team, tIdx) => (
@@ -244,8 +243,8 @@ export default function History({ sessions, seedCount, onRollback }: HistoryProp
                 {canRollback && (
                   <div style={{ marginTop: 14, borderTop: '1px solid #1e2e48', paddingTop: 14 }}>
                     {confirmRollback === originalIndex ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span style={{ fontSize: 12, color: '#ff4757' }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10 }}>
+                        <span style={{ fontSize: 12, color: '#ff4757', flex: '1 1 100%' }}>
                           {rollbackCount > 1
                             ? `This will undo ${rollbackCount} sessions. Are you sure?`
                             : 'Undo this session and restore previous player state?'}

@@ -40,6 +40,7 @@ body {
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 4px;
 }
 ::-webkit-scrollbar-track {
   background: #0c1220;
@@ -47,4 +48,16 @@ body {
 ::-webkit-scrollbar-thumb {
   background: #1e2e48;
   border-radius: 3px;
+}
+
+/* Mobile touch-friendly targets */
+@media (max-width: 640px) {
+  select, button, input {
+    min-height: 36px;
+  }
+}
+
+/* Prevent horizontal overflow on mobile */
+html, body {
+  overflow-x: hidden;
 }

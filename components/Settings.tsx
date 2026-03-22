@@ -314,7 +314,7 @@ export default function SettingsPanel({
           onClick={handleResetSettings}
           style={{
             flex: 1,
-            minWidth: 180,
+            minWidth: 140,
             padding: '12px 20px',
             background: 'transparent',
             border: '1px solid #1e2e48',
@@ -334,7 +334,7 @@ export default function SettingsPanel({
           onClick={handleResetPlayerData}
           style={{
             flex: 1,
-            minWidth: 180,
+            minWidth: 140,
             padding: '12px 20px',
             background: 'transparent',
             border: '1px solid #ff4757',

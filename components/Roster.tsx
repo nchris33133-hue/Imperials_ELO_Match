@@ -212,9 +212,9 @@ export default function Roster({
         Gender was auto-assigned from first names and may need manual correction.
       </div>
 
-      {/* Player Table */}
+      {/* Player Table — Desktop */}
       <div
-        className="rounded-lg overflow-hidden"
+        className="rounded-lg overflow-hidden hidden sm:block"
         style={{ backgroundColor: '#0c1220', border: '1px solid #1e2e48' }}
       >
         <div className="overflow-x-auto">
@@ -352,6 +352,95 @@ export default function Roster({
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* Player Cards — Mobile */}
+      <div className="sm:hidden flex flex-col gap-2">
+        {sortedPlayers.map((player) => (
+          <div
+            key={player.id}
+            className="rounded-lg p-3"
+            style={{ backgroundColor: '#0c1220', border: '1px solid #1e2e48' }}
+          >
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                {editingId === player.id ? (
+                  <input
+                    type="text"
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleRename(player.id);
+                      if (e.key === 'Escape') setEditingId(null);
+                    }}
+                    onBlur={() => handleRename(player.id)}
+                    autoFocus
+                    className="rounded px-2 py-1 text-sm outline-none focus:ring-1 flex-1"
+                    style={{
+                      backgroundColor: '#121b2e',
+                      border: '1px solid #F5C518',
+                      color: '#c8d8ec',
+                    }}
+                  />
+                ) : (
+                  <span
+                    onClick={() => {
+                      setEditingId(player.id);
+                      setEditName(player.name);
+                    }}
+                    className="text-sm font-medium truncate"
+                    style={{ color: '#c8d8ec', cursor: 'pointer' }}
+                  >
+                    {player.name}
+                  </span>
+                )}
+                <span className="font-mono text-xs" style={{ color: '#F5C518' }}>
+                  {Math.round(player.elo)}
+                </span>
+                <span className="text-xs" style={{ color: '#3d5270' }}>
+                  {player.games}GP
+                </span>
+              </div>
+              <button
+                onClick={() => handleDelete(player.id)}
+                className="rounded px-2 py-1 text-xs font-medium ml-2 shrink-0"
+                style={{
+                  backgroundColor: 'rgba(255, 71, 87, 0.15)',
+                  color: '#ff4757',
+                  border: '1px solid rgba(255, 71, 87, 0.3)',
+                }}
+              >
+                Del
+              </button>
+            </div>
+            <div className="flex gap-2">
+              <select
+                value={player.gender}
+                onChange={(e) => handleGenderChange(player.id, e.target.value as 'M' | 'F')}
+                className="rounded px-2 py-1 text-xs outline-none"
+                style={{ backgroundColor: '#121b2e', border: '1px solid #1e2e48', color: '#c8d8ec' }}
+              >
+                <option value="M">Male</option>
+                <option value="F">Female</option>
+              </select>
+              <select
+                value={player.veteran}
+                onChange={(e) => handleVeteranChange(player.id, Number(e.target.value) as 0 | 1 | 2)}
+                className="rounded px-2 py-1 text-xs outline-none flex-1"
+                style={{ backgroundColor: '#121b2e', border: '1px solid #1e2e48', color: '#c8d8ec' }}
+              >
+                <option value={0}>Regular</option>
+                <option value={1}>Veteran</option>
+                <option value={2}>Super Veteran</option>
+              </select>
+            </div>
+          </div>
+        ))}
+        {sortedPlayers.length === 0 && (
+          <div className="px-4 py-8 text-center text-sm" style={{ color: '#3d5270' }}>
+            No players added yet.
+          </div>
+        )}
       </div>
     </div>
   );
