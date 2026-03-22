@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Player, Session, Settings, AppState } from '@/lib/types';
 import { defaultSettings } from '@/lib/elo';
-import { loadState, saveState, normalizePlayers } from '@/lib/storage';
+import { loadStateAsync, saveState, normalizePlayers, subscribeToChanges } from '@/lib/storage';
 import Rankings from '@/components/Rankings';
 import Roster from '@/components/Roster';
 import TeamBuilder from '@/components/TeamBuilder';
@@ -33,6 +33,8 @@ type TabKey = typeof tabs[number]['key'];
 export default function Home() {
   const [activeTab, setActiveTab] = useState<TabKey>('rankings');
   const [state, setState] = useState<AppState | null>(null);
+  const [syncStatus, setSyncStatus] = useState<'local' | 'synced' | 'offline'>('local');
+  const isRemoteUpdate = useRef(false);
   const seedSessions = sessionsData as Session[];
 
   // Merge seed sessions with user-recorded sessions
@@ -41,14 +43,33 @@ export default function Home() {
     return [...seedSessions, ...state.sessions];
   }, [seedSessions, state]);
 
+  // Load state from Supabase (or localStorage fallback)
   useEffect(() => {
     const seedPlayers = normalizePlayers(seedPlayersRaw);
-    const loaded = loadState(seedPlayers);
-    setState(loaded);
+    loadStateAsync(seedPlayers).then(loaded => {
+      setState(loaded);
+      setSyncStatus(process.env.NEXT_PUBLIC_SUPABASE_URL ? 'synced' : 'local');
+    });
   }, []);
 
+  // Subscribe to real-time changes from other users
   useEffect(() => {
-    if (state) saveState(state);
+    const seedPlayers = normalizePlayers(seedPlayersRaw);
+    const unsubscribe = subscribeToChanges(seedPlayers, (remoteState) => {
+      isRemoteUpdate.current = true;
+      setState(remoteState);
+    });
+    return unsubscribe;
+  }, []);
+
+  // Save state on change (skip if update came from remote)
+  useEffect(() => {
+    if (!state) return;
+    if (isRemoteUpdate.current) {
+      isRemoteUpdate.current = false;
+      return;
+    }
+    saveState(state);
   }, [state]);
 
   const handleUpdatePlayers = useCallback((players: Player[]) => {
@@ -153,11 +174,24 @@ export default function Home() {
   return (
     <div className="max-w-6xl mx-auto px-4 py-6">
       {/* Header */}
-      <header className="mb-6">
-        <h1 className="text-3xl font-bold tracking-wide" style={{ fontFamily: 'var(--font-heading)', color: '#F5C518' }}>
-          VIENNA IMPERIALS
-        </h1>
-        <p className="text-dm text-sm">ELO Ranking & Team Builder</p>
+      <header className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-wide" style={{ fontFamily: 'var(--font-heading)', color: '#F5C518' }}>
+            VIENNA IMPERIALS
+          </h1>
+          <p className="text-dm text-sm">ELO Ranking & Team Builder</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <div
+            className="w-2 h-2 rounded-full"
+            style={{
+              backgroundColor: syncStatus === 'synced' ? '#2ecc71' : syncStatus === 'local' ? '#F5C518' : '#ff4757',
+            }}
+          />
+          <span className="text-xs" style={{ color: '#3d5270' }}>
+            {syncStatus === 'synced' ? 'Synced' : syncStatus === 'local' ? 'Local only' : 'Offline'}
+          </span>
+        </div>
       </header>
 
       {/* Tab Navigation */}

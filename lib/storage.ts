@@ -1,5 +1,6 @@
 import { Player, AppState } from './types';
 import { defaultSettings } from './elo';
+import { supabase, SUPABASE_TABLE, STATE_ROW_ID } from './supabase';
 
 const STORAGE_KEY = 'vi_elo_v8';
 const SEED_MERGE_KEY = 'vi_seed_merge_v1';
@@ -21,6 +22,7 @@ function migratePlayerFields(p: any): Partial<Player> {
   };
 }
 
+/** Normalize raw player data (from seed JSON or loaded state) */
 export function normalizePlayers(raw: any[]): Player[] {
   return raw.map(p => ({
     ...p,
@@ -30,51 +32,42 @@ export function normalizePlayers(raw: any[]): Player[] {
   }));
 }
 
-export function loadState(seedPlayers: Player[]): AppState {
-  if (typeof window === 'undefined') return defaultState(seedPlayers);
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return defaultState(seedPlayers);
-    const loaded = JSON.parse(raw);
-    let players = (loaded.players ?? seedPlayers).map((p: any) => ({
-      ...p,
-      placements: migratePlacements(p),
-      ...migratePlayerFields(p),
-    }));
-
-    // One-time merge: apply pts/lms/streak/lastGain from seed (Excel import) into localStorage players
-    if (!localStorage.getItem(SEED_MERGE_KEY)) {
-      const seedByName = new Map(seedPlayers.map(s => [s.name, s]));
-      players = players.map((p: any) => {
-        const seed = seedByName.get(p.name);
-        if (seed) {
-          return {
-            ...p,
-            pts: seed.pts,
-            lms: seed.lms,
-            streak: seed.streak,
-            lastGain: seed.lastGain,
-          };
-        }
-        return p;
-      });
-      localStorage.setItem(SEED_MERGE_KEY, '1');
-    }
-
-    return {
-      players,
-      nextId: loaded.nextId ?? seedPlayers.length + 1,
-      settings: { ...defaultSettings(), ...(loaded.settings ?? {}) },
-      sessions: loaded.sessions ?? [],
-    };
-  } catch {
-    return defaultState(seedPlayers);
-  }
+/** Migrate players from a loaded state blob */
+function migratePlayers(loaded: any, seedPlayers: Player[]): Player[] {
+  let players = (loaded.players ?? seedPlayers).map((p: any) => ({
+    ...p,
+    placements: migratePlacements(p),
+    ...migratePlayerFields(p),
+  }));
+  return players;
 }
 
-export function saveState(state: AppState): void {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+/** Apply one-time seed merge (Excel import) if not already done */
+function applySeedMerge(players: Player[], seedPlayers: Player[]): Player[] {
+  if (typeof window === 'undefined') return players;
+  if (localStorage.getItem(SEED_MERGE_KEY)) return players;
+
+  const seedByName = new Map(seedPlayers.map(s => [s.name, s]));
+  const merged = players.map((p: any) => {
+    const seed = seedByName.get(p.name);
+    if (seed) {
+      return { ...p, pts: seed.pts, lms: seed.lms, streak: seed.streak, lastGain: seed.lastGain };
+    }
+    return p;
+  });
+  localStorage.setItem(SEED_MERGE_KEY, '1');
+  return merged;
+}
+
+function buildState(loaded: any, seedPlayers: Player[]): AppState {
+  let players = migratePlayers(loaded, seedPlayers);
+  players = applySeedMerge(players, seedPlayers);
+  return {
+    players,
+    nextId: loaded.nextId ?? seedPlayers.length + 1,
+    settings: { ...defaultSettings(), ...(loaded.settings ?? {}) },
+    sessions: loaded.sessions ?? [],
+  };
 }
 
 function defaultState(seedPlayers: Player[]): AppState {
@@ -83,5 +76,122 @@ function defaultState(seedPlayers: Player[]): AppState {
     nextId: seedPlayers.length + 1,
     settings: defaultSettings(),
     sessions: [],
+  };
+}
+
+// --------------- Load ---------------
+
+/** Load state: try Supabase first, fall back to localStorage, then seed */
+export async function loadStateAsync(seedPlayers: Player[]): Promise<AppState> {
+  // Try Supabase
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from(SUPABASE_TABLE)
+        .select('state')
+        .eq('id', STATE_ROW_ID)
+        .single();
+
+      if (!error && data?.state) {
+        const state = buildState(data.state, seedPlayers);
+        // Also cache to localStorage
+        saveToLocalStorage(state);
+        return state;
+      }
+    } catch {
+      // Fall through to localStorage
+    }
+  }
+
+  // Fall back to localStorage
+  return loadFromLocalStorage(seedPlayers);
+}
+
+function loadFromLocalStorage(seedPlayers: Player[]): AppState {
+  if (typeof window === 'undefined') return defaultState(seedPlayers);
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return defaultState(seedPlayers);
+    return buildState(JSON.parse(raw), seedPlayers);
+  } catch {
+    return defaultState(seedPlayers);
+  }
+}
+
+// Keep the sync version for backwards compat (used nowhere critical now)
+export function loadState(seedPlayers: Player[]): AppState {
+  return loadFromLocalStorage(seedPlayers);
+}
+
+// --------------- Save ---------------
+
+let saveTimer: ReturnType<typeof setTimeout> | null = null;
+
+/** Save state to both Supabase and localStorage (debounced Supabase write) */
+export function saveState(state: AppState): void {
+  saveToLocalStorage(state);
+  debouncedSaveToSupabase(state);
+}
+
+function saveToLocalStorage(state: AppState): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function debouncedSaveToSupabase(state: AppState): void {
+  if (!supabase) return;
+  if (saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    saveToSupabase(state);
+  }, 500);
+}
+
+async function saveToSupabase(state: AppState): Promise<void> {
+  if (!supabase) return;
+  try {
+    await supabase
+      .from(SUPABASE_TABLE)
+      .upsert({
+        id: STATE_ROW_ID,
+        state,
+        updated_at: new Date().toISOString(),
+      });
+  } catch {
+    // Silent fail — localStorage is the fallback
+  }
+}
+
+// --------------- Real-time ---------------
+
+/** Subscribe to real-time changes from Supabase. Returns unsubscribe function. */
+export function subscribeToChanges(
+  seedPlayers: Player[],
+  onUpdate: (state: AppState) => void
+): (() => void) {
+  if (!supabase) return () => {};
+
+  const channel = supabase
+    .channel('app_state_changes')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: SUPABASE_TABLE,
+        filter: `id=eq.${STATE_ROW_ID}`,
+      },
+      (payload) => {
+        const newData = (payload.new as any)?.state;
+        if (newData) {
+          const state = buildState(newData, seedPlayers);
+          saveToLocalStorage(state);
+          onUpdate(state);
+        }
+      }
+    )
+    .subscribe();
+
+  return () => {
+    supabase!.removeChannel(channel);
   };
 }
