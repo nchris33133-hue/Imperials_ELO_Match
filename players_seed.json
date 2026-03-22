@@ -1,0 +1,1502 @@
+[
+  {
+    "id": 1,
+    "name": "Carina Dillmann",
+    "gender": "F",
+    "elo": 1143,
+    "games": 11,
+    "placements": [
+      7,
+      2,
+      1,
+      1
+    ],
+    "veteran": true,
+    "lastDelta": 17
+  },
+  {
+    "id": 2,
+    "name": "Dominik Riedl",
+    "gender": "M",
+    "elo": 1106,
+    "games": 15,
+    "placements": [
+      5,
+      6,
+      2,
+      2
+    ],
+    "veteran": true,
+    "lastDelta": 17
+  },
+  {
+    "id": 3,
+    "name": "Magdalena Malli",
+    "gender": "F",
+    "elo": 1093,
+    "games": 11,
+    "placements": [
+      5,
+      3,
+      1,
+      2
+    ],
+    "veteran": true,
+    "lastDelta": 6
+  },
+  {
+    "id": 4,
+    "name": "Silke Kögl",
+    "gender": "F",
+    "elo": 1090,
+    "games": 12,
+    "placements": [
+      4,
+      4,
+      2,
+      2
+    ],
+    "veteran": true,
+    "lastDelta": -15
+  },
+  {
+    "id": 5,
+    "name": "Thomas Wanek",
+    "gender": "M",
+    "elo": 1088,
+    "games": 7,
+    "placements": [
+      4,
+      1,
+      1,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": 22
+  },
+  {
+    "id": 6,
+    "name": "Flo Kögl",
+    "gender": "M",
+    "elo": 1079,
+    "games": 12,
+    "placements": [
+      3,
+      6,
+      2,
+      1
+    ],
+    "veteran": true,
+    "lastDelta": -15
+  },
+  {
+    "id": 7,
+    "name": "Amen Hussain",
+    "gender": "M",
+    "elo": 1071,
+    "games": 6,
+    "placements": [
+      4,
+      0,
+      1,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": 24
+  },
+  {
+    "id": 8,
+    "name": "Luke Nemerski",
+    "gender": "M",
+    "elo": 1069,
+    "games": 3,
+    "placements": [
+      3,
+      0,
+      0,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 24
+  },
+  {
+    "id": 9,
+    "name": "Julian Schönweger",
+    "gender": "M",
+    "elo": 1068,
+    "games": 13,
+    "placements": [
+      5,
+      3,
+      1,
+      4
+    ],
+    "veteran": true,
+    "lastDelta": 6
+  },
+  {
+    "id": 10,
+    "name": "Caspar de Maré",
+    "gender": "M",
+    "elo": 1050,
+    "games": 4,
+    "placements": [
+      3,
+      0,
+      0,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": -18
+  },
+  {
+    "id": 11,
+    "name": "Wolfgang",
+    "gender": "M",
+    "elo": 1047,
+    "games": 2,
+    "placements": [
+      2,
+      0,
+      0,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 24
+  },
+  {
+    "id": 12,
+    "name": "Laetitia Föttinger",
+    "gender": "F",
+    "elo": 1043,
+    "games": 11,
+    "placements": [
+      4,
+      1,
+      4,
+      2
+    ],
+    "veteran": true,
+    "lastDelta": -15
+  },
+  {
+    "id": 13,
+    "name": "Arzun",
+    "gender": "M",
+    "elo": 1042,
+    "games": 14,
+    "placements": [
+      3,
+      5,
+      3,
+      3
+    ],
+    "veteran": true,
+    "lastDelta": 17
+  },
+  {
+    "id": 14,
+    "name": "Kerstin Aigner",
+    "gender": "F",
+    "elo": 1040,
+    "games": 7,
+    "placements": [
+      2,
+      3,
+      0,
+      2
+    ],
+    "veteran": false,
+    "lastDelta": 9
+  },
+  {
+    "id": 15,
+    "name": "Markus Kerstin",
+    "gender": "M",
+    "elo": 1035,
+    "games": 3,
+    "placements": [
+      1,
+      1,
+      1,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 9
+  },
+  {
+    "id": 16,
+    "name": "Rory",
+    "gender": "M",
+    "elo": 1024,
+    "games": 1,
+    "placements": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 24
+  },
+  {
+    "id": 17,
+    "name": "Xaver",
+    "gender": "M",
+    "elo": 1023,
+    "games": 1,
+    "placements": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 23
+  },
+  {
+    "id": 18,
+    "name": "Sophie",
+    "gender": "F",
+    "elo": 1023,
+    "games": 1,
+    "placements": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 23
+  },
+  {
+    "id": 19,
+    "name": "Stanzi",
+    "gender": "F",
+    "elo": 1023,
+    "games": 1,
+    "placements": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 23
+  },
+  {
+    "id": 20,
+    "name": "Kiki",
+    "gender": "F",
+    "elo": 1023,
+    "games": 1,
+    "placements": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 23
+  },
+  {
+    "id": 21,
+    "name": "Susi Kopka",
+    "gender": "F",
+    "elo": 1023,
+    "games": 1,
+    "placements": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 23
+  },
+  {
+    "id": 22,
+    "name": "Olivia",
+    "gender": "F",
+    "elo": 1023,
+    "games": 1,
+    "placements": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 23
+  },
+  {
+    "id": 23,
+    "name": "Felix",
+    "gender": "M",
+    "elo": 1023,
+    "games": 1,
+    "placements": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 23
+  },
+  {
+    "id": 24,
+    "name": "Benny",
+    "gender": "M",
+    "elo": 1022,
+    "games": 1,
+    "placements": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 22
+  },
+  {
+    "id": 25,
+    "name": "Matthias Marco Freund",
+    "gender": "M",
+    "elo": 1022,
+    "games": 1,
+    "placements": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 22
+  },
+  {
+    "id": 26,
+    "name": "Victor Marco Freund",
+    "gender": "M",
+    "elo": 1022,
+    "games": 1,
+    "placements": [
+      1,
+      0,
+      0,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 22
+  },
+  {
+    "id": 27,
+    "name": "Lana",
+    "gender": "F",
+    "elo": 1021,
+    "games": 3,
+    "placements": [
+      1,
+      1,
+      1,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": -3
+  },
+  {
+    "id": 28,
+    "name": "Martin Petri",
+    "gender": "M",
+    "elo": 1021,
+    "games": 3,
+    "placements": [
+      0,
+      2,
+      1,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 9
+  },
+  {
+    "id": 29,
+    "name": "Tobias Myclubs",
+    "gender": "M",
+    "elo": 1020,
+    "games": 2,
+    "placements": [
+      0,
+      2,
+      0,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 9
+  },
+  {
+    "id": 30,
+    "name": "Michael Myclubs",
+    "gender": "M",
+    "elo": 1019,
+    "games": 2,
+    "placements": [
+      1,
+      0,
+      1,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 24
+  },
+  {
+    "id": 31,
+    "name": "Marcel Hölbl",
+    "gender": "M",
+    "elo": 1017,
+    "games": 13,
+    "placements": [
+      2,
+      4,
+      3,
+      4
+    ],
+    "veteran": true,
+    "lastDelta": -13
+  },
+  {
+    "id": 32,
+    "name": "Ilvy Ladstätter",
+    "gender": "F",
+    "elo": 1014,
+    "games": 14,
+    "placements": [
+      3,
+      4,
+      3,
+      4
+    ],
+    "veteran": true,
+    "lastDelta": 17
+  },
+  {
+    "id": 33,
+    "name": "Alex Rokas",
+    "gender": "M",
+    "elo": 1013,
+    "games": 4,
+    "placements": [
+      1,
+      1,
+      2,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 24
+  },
+  {
+    "id": 34,
+    "name": "Jasmin Moser",
+    "gender": "F",
+    "elo": 1012,
+    "games": 2,
+    "placements": [
+      0,
+      2,
+      0,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 9
+  },
+  {
+    "id": 35,
+    "name": "Lisa Seeböck",
+    "gender": "F",
+    "elo": 1012,
+    "games": 2,
+    "placements": [
+      0,
+      2,
+      0,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 3
+  },
+  {
+    "id": 36,
+    "name": "Marlene",
+    "gender": "F",
+    "elo": 1011,
+    "games": 1,
+    "placements": [
+      0,
+      1,
+      0,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 11
+  },
+  {
+    "id": 37,
+    "name": "Alexandra",
+    "gender": "F",
+    "elo": 1011,
+    "games": 1,
+    "placements": [
+      0,
+      1,
+      0,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 11
+  },
+  {
+    "id": 38,
+    "name": "Patrik",
+    "gender": "M",
+    "elo": 1011,
+    "games": 1,
+    "placements": [
+      0,
+      1,
+      0,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 11
+  },
+  {
+    "id": 39,
+    "name": "Branko Jovanovic",
+    "gender": "M",
+    "elo": 1010,
+    "games": 1,
+    "placements": [
+      0,
+      1,
+      0,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 10
+  },
+  {
+    "id": 40,
+    "name": "Richard Holstein",
+    "gender": "M",
+    "elo": 1010,
+    "games": 1,
+    "placements": [
+      0,
+      1,
+      0,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 10
+  },
+  {
+    "id": 41,
+    "name": "Samuel Ziselsberger",
+    "gender": "M",
+    "elo": 1009,
+    "games": 5,
+    "placements": [
+      2,
+      0,
+      1,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": 22
+  },
+  {
+    "id": 42,
+    "name": "Berk",
+    "gender": "M",
+    "elo": 1009,
+    "games": 1,
+    "placements": [
+      0,
+      1,
+      0,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 9
+  },
+  {
+    "id": 43,
+    "name": "Büsra Gedik",
+    "gender": "F",
+    "elo": 1007,
+    "games": 14,
+    "placements": [
+      4,
+      2,
+      5,
+      3
+    ],
+    "veteran": true,
+    "lastDelta": 5
+  },
+  {
+    "id": 44,
+    "name": "Richard Ninjas",
+    "gender": "M",
+    "elo": 1006,
+    "games": 2,
+    "placements": [
+      1,
+      0,
+      1,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 22
+  },
+  {
+    "id": 45,
+    "name": "Steve Roll",
+    "gender": "M",
+    "elo": 1006,
+    "games": 1,
+    "placements": [
+      0,
+      1,
+      0,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 6
+  },
+  {
+    "id": 46,
+    "name": "Christoph Helmut Kopka",
+    "gender": "M",
+    "elo": 1004,
+    "games": 11,
+    "placements": [
+      4,
+      0,
+      5,
+      1
+    ],
+    "veteran": true,
+    "lastDelta": -15
+  },
+  {
+    "id": 47,
+    "name": "Leon Simic",
+    "gender": "M",
+    "elo": 1003,
+    "games": 6,
+    "placements": [
+      2,
+      1,
+      0,
+      2
+    ],
+    "veteran": false,
+    "lastDelta": 22
+  },
+  {
+    "id": 48,
+    "name": "Marco Roll",
+    "gender": "M",
+    "elo": 1003,
+    "games": 3,
+    "placements": [
+      1,
+      0,
+      1,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": 22
+  },
+  {
+    "id": 49,
+    "name": "Christopher Pietschnig",
+    "gender": "M",
+    "elo": 1002,
+    "games": 8,
+    "placements": [
+      1,
+      4,
+      0,
+      3
+    ],
+    "veteran": false,
+    "lastDelta": 6
+  },
+  {
+    "id": 50,
+    "name": "Andrea Stadler",
+    "gender": "F",
+    "elo": 998,
+    "games": 11,
+    "placements": [
+      2,
+      3,
+      2,
+      4
+    ],
+    "veteran": true,
+    "lastDelta": -13
+  },
+  {
+    "id": 51,
+    "name": "Christian Riedl",
+    "gender": "M",
+    "elo": 998,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      1,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": -2
+  },
+  {
+    "id": 52,
+    "name": "Flo Hermann",
+    "gender": "M",
+    "elo": 998,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      1,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": -2
+  },
+  {
+    "id": 53,
+    "name": "Phoebe Myclubs",
+    "gender": "F",
+    "elo": 998,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      1,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": -2
+  },
+  {
+    "id": 54,
+    "name": "Lilli Huber",
+    "gender": "F",
+    "elo": 998,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      1,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": -2
+  },
+  {
+    "id": 55,
+    "name": "Pascal Marco Freund",
+    "gender": "M",
+    "elo": 998,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      1,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": -2
+  },
+  {
+    "id": 56,
+    "name": "Dominic Petritsch",
+    "gender": "M",
+    "elo": 997,
+    "games": 11,
+    "placements": [
+      2,
+      3,
+      3,
+      3
+    ],
+    "veteran": true,
+    "lastDelta": 5
+  },
+  {
+    "id": 57,
+    "name": "Lisa Riedl",
+    "gender": "F",
+    "elo": 997,
+    "games": 3,
+    "placements": [
+      0,
+      1,
+      2,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": 3
+  },
+  {
+    "id": 58,
+    "name": "Lisa",
+    "gender": "F",
+    "elo": 997,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      1,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": -3
+  },
+  {
+    "id": 59,
+    "name": "Adrian 2",
+    "gender": "M",
+    "elo": 997,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      1,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": -3
+  },
+  {
+    "id": 60,
+    "name": "Rosa",
+    "gender": "F",
+    "elo": 997,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      1,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": -3
+  },
+  {
+    "id": 61,
+    "name": "Lino Perner",
+    "gender": "M",
+    "elo": 996,
+    "games": 3,
+    "placements": [
+      0,
+      2,
+      0,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": -17
+  },
+  {
+    "id": 62,
+    "name": "Martin Hermann",
+    "gender": "M",
+    "elo": 996,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      1,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": -4
+  },
+  {
+    "id": 63,
+    "name": "Rebecca Hermann",
+    "gender": "F",
+    "elo": 996,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      1,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": -4
+  },
+  {
+    "id": 64,
+    "name": "Tia Szasz",
+    "gender": "F",
+    "elo": 996,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      1,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": -4
+  },
+  {
+    "id": 65,
+    "name": "Alex Rabl",
+    "gender": "M",
+    "elo": 996,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      1,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": -4
+  },
+  {
+    "id": 66,
+    "name": "Verena",
+    "gender": "F",
+    "elo": 995,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      1,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": -5
+  },
+  {
+    "id": 67,
+    "name": "Hannah",
+    "gender": "F",
+    "elo": 995,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      1,
+      0
+    ],
+    "veteran": false,
+    "lastDelta": -5
+  },
+  {
+    "id": 68,
+    "name": "Daniel Vondrasek",
+    "gender": "M",
+    "elo": 992,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      0,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": -8
+  },
+  {
+    "id": 69,
+    "name": "Adrian BabyNinja",
+    "gender": "M",
+    "elo": 991,
+    "games": 4,
+    "placements": [
+      0,
+      2,
+      0,
+      2
+    ],
+    "veteran": false,
+    "lastDelta": 6
+  },
+  {
+    "id": 70,
+    "name": "Nina Koller",
+    "gender": "F",
+    "elo": 990,
+    "games": 4,
+    "placements": [
+      0,
+      2,
+      1,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": 9
+  },
+  {
+    "id": 71,
+    "name": "Sebastian Oberleitner",
+    "gender": "M",
+    "elo": 986,
+    "games": 2,
+    "placements": [
+      0,
+      1,
+      0,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": 3
+  },
+  {
+    "id": 72,
+    "name": "Naef",
+    "gender": "M",
+    "elo": 985,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      0,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": -15
+  },
+  {
+    "id": 73,
+    "name": "Baby Dominik",
+    "gender": "M",
+    "elo": 985,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      0,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": -15
+  },
+  {
+    "id": 74,
+    "name": "Joel",
+    "gender": "M",
+    "elo": 983,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      0,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": -17
+  },
+  {
+    "id": 75,
+    "name": "Magdalena",
+    "gender": "F",
+    "elo": 983,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      0,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": -17
+  },
+  {
+    "id": 76,
+    "name": "Emir Arzun Bruder",
+    "gender": "M",
+    "elo": 983,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      0,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": -17
+  },
+  {
+    "id": 77,
+    "name": "Demian Kerner",
+    "gender": "M",
+    "elo": 983,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      0,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": -17
+  },
+  {
+    "id": 78,
+    "name": "Johan Aninger",
+    "gender": "M",
+    "elo": 983,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      0,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": -17
+  },
+  {
+    "id": 79,
+    "name": "Larissa",
+    "gender": "F",
+    "elo": 983,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      0,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": -17
+  },
+  {
+    "id": 80,
+    "name": "Lea Brunner",
+    "gender": "F",
+    "elo": 983,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      0,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": -17
+  },
+  {
+    "id": 81,
+    "name": "Maximilian Floriani",
+    "gender": "M",
+    "elo": 983,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      0,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": -17
+  },
+  {
+    "id": 82,
+    "name": "Jed",
+    "gender": "M",
+    "elo": 983,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      0,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": -17
+  },
+  {
+    "id": 83,
+    "name": "Nicole Myclubs",
+    "gender": "F",
+    "elo": 983,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      0,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": -17
+  },
+  {
+    "id": 84,
+    "name": "Raoul Myclubs",
+    "gender": "M",
+    "elo": 983,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      0,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": -17
+  },
+  {
+    "id": 85,
+    "name": "Cim",
+    "gender": "M",
+    "elo": 982,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      0,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": -18
+  },
+  {
+    "id": 86,
+    "name": "Heinrich Wögerbauer",
+    "gender": "M",
+    "elo": 981,
+    "games": 14,
+    "placements": [
+      3,
+      2,
+      5,
+      4
+    ],
+    "veteran": true,
+    "lastDelta": 5
+  },
+  {
+    "id": 87,
+    "name": "Markus Myclubs",
+    "gender": "M",
+    "elo": 981,
+    "games": 2,
+    "placements": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": -2
+  },
+  {
+    "id": 88,
+    "name": "Tanh Myclubs",
+    "gender": "M",
+    "elo": 981,
+    "games": 1,
+    "placements": [
+      0,
+      0,
+      0,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": -19
+  },
+  {
+    "id": 89,
+    "name": "Linda Myclubs",
+    "gender": "F",
+    "elo": 979,
+    "games": 2,
+    "placements": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": -2
+  },
+  {
+    "id": 90,
+    "name": "Alex Weindl",
+    "gender": "M",
+    "elo": 972,
+    "games": 7,
+    "placements": [
+      1,
+      2,
+      0,
+      3
+    ],
+    "veteran": false,
+    "lastDelta": -17
+  },
+  {
+    "id": 91,
+    "name": "Julia Boublik",
+    "gender": "F",
+    "elo": 969,
+    "games": 7,
+    "placements": [
+      1,
+      1,
+      3,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": 13
+  },
+  {
+    "id": 92,
+    "name": "Christian Mehofer",
+    "gender": "M",
+    "elo": 969,
+    "games": 7,
+    "placements": [
+      0,
+      2,
+      3,
+      2
+    ],
+    "veteran": false,
+    "lastDelta": -2
+  },
+  {
+    "id": 93,
+    "name": "Pawel Czech",
+    "gender": "M",
+    "elo": 966,
+    "games": 2,
+    "placements": [
+      0,
+      0,
+      1,
+      1
+    ],
+    "veteran": false,
+    "lastDelta": -17
+  },
+  {
+    "id": 94,
+    "name": "Fabian",
+    "gender": "M",
+    "elo": 963,
+    "games": 5,
+    "placements": [
+      0,
+      2,
+      0,
+      2
+    ],
+    "veteran": false,
+    "lastDelta": -17
+  },
+  {
+    "id": 95,
+    "name": "Anna Thunder",
+    "gender": "F",
+    "elo": 962,
+    "games": 4,
+    "placements": [
+      0,
+      1,
+      1,
+      2
+    ],
+    "veteran": false,
+    "lastDelta": -16
+  },
+  {
+    "id": 96,
+    "name": "Akad Kara",
+    "gender": "M",
+    "elo": 952,
+    "games": 3,
+    "placements": [
+      0,
+      0,
+      1,
+      2
+    ],
+    "veteran": false,
+    "lastDelta": -16
+  },
+  {
+    "id": 97,
+    "name": "Asmin",
+    "gender": "F",
+    "elo": 950,
+    "games": 6,
+    "placements": [
+      0,
+      2,
+      0,
+      4
+    ],
+    "veteran": false,
+    "lastDelta": 11
+  },
+  {
+    "id": 98,
+    "name": "Sammy",
+    "gender": "M",
+    "elo": 944,
+    "games": 8,
+    "placements": [
+      2,
+      0,
+      2,
+      3
+    ],
+    "veteran": false,
+    "lastDelta": -19
+  },
+  {
+    "id": 99,
+    "name": "Matthias Friedmann",
+    "gender": "M",
+    "elo": 936,
+    "games": 4,
+    "placements": [
+      0,
+      0,
+      2,
+      2
+    ],
+    "veteran": false,
+    "lastDelta": -16
+  },
+  {
+    "id": 100,
+    "name": "Moritz",
+    "gender": "M",
+    "elo": 898,
+    "games": 7,
+    "placements": [
+      0,
+      0,
+      2,
+      5
+    ],
+    "veteran": false,
+    "lastDelta": -17
+  }
+]

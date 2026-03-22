@@ -1,0 +1,157 @@
+'use client';
+
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { Player, Session, Settings, AppState } from '@/lib/types';
+import { defaultSettings } from '@/lib/elo';
+import { loadState, saveState, normalizePlayers } from '@/lib/storage';
+import Rankings from '@/components/Rankings';
+import Roster from '@/components/Roster';
+import TeamBuilder from '@/components/TeamBuilder';
+import History from '@/components/History';
+import SettingsPanel from '@/components/Settings';
+import seedPlayersRaw from '@/data/players.json';
+import sessionsData from '@/data/history.json';
+
+const tabs = [
+  { key: 'rankings', label: '🏆 Rankings' },
+  { key: 'roster', label: '👥 Roster' },
+  { key: 'teams', label: '⚖️ Teams' },
+  { key: 'history', label: '📋 History' },
+  { key: 'settings', label: '⚙️ Settings' },
+] as const;
+
+type TabKey = typeof tabs[number]['key'];
+
+export default function Home() {
+  const [activeTab, setActiveTab] = useState<TabKey>('rankings');
+  const [state, setState] = useState<AppState | null>(null);
+  const seedSessions = sessionsData as Session[];
+
+  // Merge seed sessions with user-recorded sessions
+  const allSessions = useMemo(() => {
+    if (!state) return seedSessions;
+    return [...seedSessions, ...state.sessions];
+  }, [seedSessions, state]);
+
+  useEffect(() => {
+    const seedPlayers = normalizePlayers(seedPlayersRaw);
+    const loaded = loadState(seedPlayers);
+    setState(loaded);
+  }, []);
+
+  useEffect(() => {
+    if (state) saveState(state);
+  }, [state]);
+
+  const handleUpdatePlayers = useCallback((players: Player[]) => {
+    setState(prev => prev ? { ...prev, players } : prev);
+  }, []);
+
+  const handleUpdateNextId = useCallback((nextId: number) => {
+    setState(prev => prev ? { ...prev, nextId } : prev);
+  }, []);
+
+  const handleUpdateSettings = useCallback((settings: Settings) => {
+    setState(prev => prev ? { ...prev, settings } : prev);
+  }, []);
+
+  const handleRecordMatch = useCallback((updatedPlayers: Player[], session: Session) => {
+    setState(prev => {
+      if (!prev) return prev;
+      // Merge updated players into the full roster
+      const playerMap = new Map(updatedPlayers.map(p => [p.id, p]));
+      const mergedPlayers = prev.players.map(p => {
+        const updated = playerMap.get(p.id);
+        if (updated) return updated; // streak already incremented in applyMatchResults
+        // Reset streak for non-participants
+        return { ...p, streak: 0 };
+      });
+      return {
+        ...prev,
+        players: mergedPlayers,
+        sessions: [...prev.sessions, session],
+      };
+    });
+  }, []);
+
+  const handleReset = useCallback(() => {
+    const seedPlayers = normalizePlayers(seedPlayersRaw);
+    const fresh: AppState = {
+      players: seedPlayers,
+      nextId: seedPlayers.length + 1,
+      settings: defaultSettings(),
+      sessions: [],
+    };
+    setState(fresh);
+  }, []);
+
+  if (!state) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-dm text-lg">Loading...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto px-4 py-6">
+      {/* Header */}
+      <header className="mb-6">
+        <h1 className="text-3xl font-bold tracking-wide" style={{ fontFamily: 'var(--font-heading)', color: '#F5C518' }}>
+          VIENNA IMPERIALS
+        </h1>
+        <p className="text-dm text-sm">ELO Ranking & Team Builder</p>
+      </header>
+
+      {/* Tab Navigation */}
+      <nav className="flex gap-1 mb-6 border-b border-bo pb-0 overflow-x-auto">
+        {tabs.map(tab => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap transition-colors border-b-2 -mb-px ${
+              activeTab === tab.key
+                ? 'border-acc text-acc'
+                : 'border-transparent text-dm hover:text-tx'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </nav>
+
+      {/* Tab Content */}
+      {activeTab === 'rankings' && (
+        <Rankings players={state.players} settings={state.settings} sessions={allSessions} />
+      )}
+      {activeTab === 'roster' && (
+        <Roster
+          players={state.players}
+          settings={state.settings}
+          onUpdatePlayers={handleUpdatePlayers}
+          nextId={state.nextId}
+          onUpdateNextId={handleUpdateNextId}
+        />
+      )}
+      {activeTab === 'teams' && (
+        <TeamBuilder
+          players={state.players}
+          settings={state.settings}
+          onRecordMatch={handleRecordMatch}
+          sessionCount={allSessions.length}
+        />
+      )}
+      {activeTab === 'history' && (
+        <History sessions={allSessions} />
+      )}
+      {activeTab === 'settings' && (
+        <SettingsPanel
+          settings={state.settings}
+          onUpdateSettings={handleUpdateSettings}
+          onReset={handleReset}
+          players={state.players}
+        />
+      )}
+    </div>
+  );
+}

@@ -1,0 +1,801 @@
+[
+  {
+    "label": "02 Okt 2024",
+    "date": "2024-10-02",
+    "teams": [
+      {
+        "rank": 1,
+        "players": [
+          "Heinrich Wögerbauer",
+          "Marcel Hölbl",
+          "Laetitia Föttinger",
+          "Kerstin Aigner",
+          "Caspar de Maré",
+          "Luke Nemerski"
+        ]
+      },
+      {
+        "rank": 2,
+        "players": [
+          "Dominik Riedl",
+          "Arzun",
+          "Ilvy Ladstätter",
+          "Andrea Stadler",
+          "Lino Perner",
+          "Branko Jovanovic",
+          "Richard Holstein"
+        ]
+      },
+      {
+        "rank": 3,
+        "players": [
+          "Christoph Helmut Kopka",
+          "Alex Rokas",
+          "Martin Hermann",
+          "Rebecca Hermann",
+          "Tia Szasz"
+        ]
+      },
+      {
+        "rank": 4,
+        "players": [
+          "Magdalena Malli",
+          "Amen Hussain",
+          "Asmin",
+          "Anna Thunder",
+          "Matthias Friedmann",
+          "Akad Kara",
+          "Sebastian Oberleitner",
+          "Demian Kerner",
+          "Johan Aninger",
+          "Larissa",
+          "Lea Brunner",
+          "Maximilian Floriani"
+        ]
+      }
+    ]
+  },
+  {
+    "label": "09 Okt 2024",
+    "date": "2024-10-09",
+    "teams": [
+      {
+        "rank": 1,
+        "players": [
+          "Flo Kögl",
+          "Carina Dillmann",
+          "Kerstin Aigner",
+          "Amen Hussain",
+          "Markus Kerstin"
+        ]
+      },
+      {
+        "rank": 2,
+        "players": [
+          "Büsra Gedik",
+          "Silke Kögl",
+          "Dominic Petritsch",
+          "Lino Perner",
+          "Jasmin Moser",
+          "Sebastian Oberleitner"
+        ]
+      },
+      {
+        "rank": 3,
+        "players": [
+          "Heinrich Wögerbauer",
+          "Christoph Helmut Kopka",
+          "Julia Boublik",
+          "Sammy",
+          "Pawel Czech"
+        ]
+      }
+    ]
+  },
+  {
+    "label": "16 Okt 2024",
+    "date": "2024-10-16",
+    "teams": [
+      {
+        "rank": 1,
+        "players": [
+          "Flo Kögl",
+          "Heinrich Wögerbauer",
+          "Magdalena Malli",
+          "Caspar de Maré",
+          "Stanzi",
+          "Kiki"
+        ]
+      },
+      {
+        "rank": 2,
+        "players": [
+          "Julian Schönweger",
+          "Silke Kögl",
+          "Carina Dillmann",
+          "Fabian",
+          "Martin Petri",
+          "Jasmin Moser"
+        ]
+      },
+      {
+        "rank": 3,
+        "players": [
+          "Dominik Riedl",
+          "Ilvy Ladstätter",
+          "Christoph Helmut Kopka",
+          "Amen Hussain",
+          "Julia Boublik",
+          "Lisa"
+        ]
+      },
+      {
+        "rank": 4,
+        "players": [
+          "Arzun",
+          "Büsra Gedik",
+          "Marcel Hölbl",
+          "Laetitia Föttinger",
+          "Andrea Stadler",
+          "Christopher Pietschnig",
+          "Sammy",
+          "Asmin",
+          "Moritz",
+          "Lino Perner",
+          "Pawel Czech",
+          "Jed"
+        ]
+      }
+    ]
+  },
+  {
+    "label": "23 Okt 2024",
+    "date": "2024-10-23",
+    "teams": [
+      {
+        "rank": 1,
+        "players": [
+          "Julian Schönweger",
+          "Silke Kögl",
+          "Marcel Hölbl",
+          "Dominic Petritsch",
+          "Laetitia Föttinger",
+          "Christoph Helmut Kopka",
+          "Andrea Stadler",
+          "Xaver",
+          "Sophie"
+        ]
+      },
+      {
+        "rank": 2,
+        "players": [
+          "Flo Kögl",
+          "Kerstin Aigner",
+          "Fabian",
+          "Lana"
+        ]
+      },
+      {
+        "rank": 3,
+        "players": [
+          "Büsra Gedik",
+          "Julia Boublik",
+          "Moritz",
+          "Matthias Friedmann"
+        ]
+      }
+    ]
+  },
+  {
+    "label": "06 Nov 2024",
+    "date": "2024-11-06",
+    "teams": [
+      {
+        "rank": 1,
+        "players": [
+          "Julian Schönweger",
+          "Ilvy Ladstätter",
+          "Carina Dillmann",
+          "Christoph Helmut Kopka",
+          "Amen Hussain",
+          "Benny"
+        ]
+      },
+      {
+        "rank": 2,
+        "players": [
+          "Heinrich Wögerbauer",
+          "Andrea Stadler",
+          "Berk"
+        ]
+      },
+      {
+        "rank": 3,
+        "players": [
+          "Dominik Riedl",
+          "Arzun",
+          "Marcel Hölbl",
+          "Laetitia Föttinger"
+        ]
+      },
+      {
+        "rank": 4,
+        "players": [
+          "Büsra Gedik",
+          "Magdalena Malli",
+          "Julia Boublik",
+          "Asmin",
+          "Moritz",
+          "Fabian",
+          "Matthias Friedmann",
+          "Akad Kara"
+        ]
+      }
+    ]
+  },
+  {
+    "label": "20 Nov 2024 — 2v2",
+    "date": "2024-11-20",
+    "teams": [
+      {
+        "rank": 1,
+        "players": [
+          "Dominik Riedl",
+          "Ilvy Ladstätter"
+        ]
+      },
+      {
+        "rank": 2,
+        "players": [
+          "Julian Schönweger",
+          "Flo Kögl"
+        ]
+      },
+      {
+        "rank": 3,
+        "players": [
+          "Marcel Hölbl",
+          "Martin Petri"
+        ]
+      },
+      {
+        "rank": 4,
+        "players": [
+          "Silke Kögl",
+          "Dominic Petritsch",
+          "Andrea Stadler",
+          "Adrian BabyNinja"
+        ]
+      }
+    ]
+  },
+  {
+    "label": "27 Nov 2024",
+    "date": "2024-11-27",
+    "teams": [
+      {
+        "rank": 1,
+        "players": [
+          "Dominik Riedl",
+          "Julian Schönweger",
+          "Magdalena Malli",
+          "Dominic Petritsch",
+          "Christoph Helmut Kopka",
+          "Lana",
+          "Susi Kopka"
+        ]
+      },
+      {
+        "rank": 2,
+        "players": [
+          "Silke Kögl",
+          "Carina Dillmann",
+          "Alex Weindl"
+        ]
+      },
+      {
+        "rank": 3,
+        "players": [
+          "Arzun",
+          "Büsra Gedik",
+          "Heinrich Wögerbauer",
+          "Lisa Riedl",
+          "Christian Riedl"
+        ]
+      },
+      {
+        "rank": 4,
+        "players": [
+          "Flo Kögl",
+          "Ilvy Ladstätter",
+          "Laetitia Föttinger",
+          "Andrea Stadler",
+          "Kerstin Aigner",
+          "Leon Simic",
+          "Moritz",
+          "Fabian"
+        ]
+      }
+    ]
+  },
+  {
+    "label": "04 Dez 2024",
+    "date": "2024-12-04",
+    "teams": [
+      {
+        "rank": 1,
+        "players": [
+          "Julian Schönweger",
+          "Arzun",
+          "Büsra Gedik",
+          "Magdalena Malli",
+          "Carina Dillmann",
+          "Amen Hussain",
+          "Caspar de Maré",
+          "Luke Nemerski"
+        ]
+      },
+      {
+        "rank": 2,
+        "players": [
+          "Dominik Riedl",
+          "Flo Kögl",
+          "Silke Kögl",
+          "Marcel Hölbl",
+          "Christopher Pietschnig",
+          "Alex Weindl",
+          "Alex Rokas",
+          "Martin Petri"
+        ]
+      },
+      {
+        "rank": 3,
+        "players": [
+          "Heinrich Wögerbauer",
+          "Ilvy Ladstätter",
+          "Nina Koller",
+          "Lisa Riedl",
+          "Alex Rabl"
+        ]
+      },
+      {
+        "rank": 4,
+        "players": [
+          "Samuel Ziselsberger",
+          "Asmin",
+          "Anna Thunder",
+          "Naef",
+          "Baby Dominik"
+        ]
+      }
+    ]
+  },
+  {
+    "label": "11 Dez 2024",
+    "date": "2024-12-11",
+    "teams": [
+      {
+        "rank": 1,
+        "players": [
+          "Julian Schönweger",
+          "Arzun",
+          "Laetitia Föttinger",
+          "Thomas Wanek",
+          "Julia Boublik",
+          "Alex Weindl"
+        ]
+      },
+      {
+        "rank": 2,
+        "players": [
+          "Dominik Riedl",
+          "Magdalena Malli",
+          "Ilvy Ladstätter",
+          "Asmin",
+          "Nina Koller",
+          "Lisa Riedl"
+        ]
+      },
+      {
+        "rank": 3,
+        "players": [
+          "Büsra Gedik",
+          "Dominic Petritsch",
+          "Christoph Helmut Kopka",
+          "Alex Rokas",
+          "Matthias Friedmann",
+          "Akad Kara"
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Social League X",
+    "date": "2025-01-01",
+    "teams": [
+      {
+        "rank": 1,
+        "players": [
+          "Magdalena Malli"
+        ]
+      },
+      {
+        "rank": 2,
+        "players": [
+          "Dominik Riedl",
+          "Flo Kögl",
+          "Julia Boublik"
+        ]
+      },
+      {
+        "rank": 3,
+        "players": [
+          "Büsra Gedik",
+          "Heinrich Wögerbauer",
+          "Silke Kögl",
+          "Dominic Petritsch",
+          "Markus Kerstin"
+        ]
+      },
+      {
+        "rank": 4,
+        "players": [
+          "Julian Schönweger",
+          "Arzun",
+          "Ilvy Ladstätter",
+          "Marcel Hölbl",
+          "Thomas Wanek",
+          "Kerstin Aigner",
+          "Christian Mehofer",
+          "Daniel Vondrasek"
+        ]
+      }
+    ]
+  },
+  {
+    "label": "15 Jan 2025",
+    "date": "2025-01-15",
+    "teams": [
+      {
+        "rank": 1,
+        "players": [
+          "Büsra Gedik",
+          "Amen Hussain",
+          "Sammy",
+          "Luke Nemerski",
+          "Alex Rokas",
+          "Rory"
+        ]
+      },
+      {
+        "rank": 2,
+        "players": [
+          "Arzun",
+          "Magdalena Malli",
+          "Marcel Hölbl",
+          "Christian Mehofer",
+          "Anna Thunder"
+        ]
+      },
+      {
+        "rank": 3,
+        "players": [
+          "Laetitia Föttinger",
+          "Andrea Stadler",
+          "Samuel Ziselsberger",
+          "Lana",
+          "Adrian 2",
+          "Rosa"
+        ]
+      },
+      {
+        "rank": 4,
+        "players": [
+          "Dominik Riedl",
+          "Julian Schönweger",
+          "Heinrich Wögerbauer",
+          "Ilvy Ladstätter",
+          "Dominic Petritsch",
+          "Alex Weindl",
+          "Caspar de Maré",
+          "Moritz",
+          "Nina Koller",
+          "Cim"
+        ]
+      }
+    ]
+  },
+  {
+    "label": "22 Jan 2025",
+    "date": "2025-01-22",
+    "teams": [
+      {
+        "rank": 1,
+        "players": [
+          "Dominik Riedl",
+          "Silke Kögl",
+          "Christoph Helmut Kopka",
+          "Andrea Stadler",
+          "Thomas Wanek",
+          "Wolfgang",
+          "Olivia",
+          "Felix"
+        ]
+      },
+      {
+        "rank": 2,
+        "players": [
+          "Laetitia Föttinger",
+          "Christopher Pietschnig",
+          "Asmin",
+          "Tobias Myclubs",
+          "Marlene",
+          "Alexandra",
+          "Patrik"
+        ]
+      },
+      {
+        "rank": 3,
+        "players": [
+          "Flo Kögl",
+          "Magdalena Malli",
+          "Carina Dillmann",
+          "Marcel Hölbl",
+          "Dominic Petritsch",
+          "Christian Mehofer",
+          "Michael Myclubs",
+          "Verena",
+          "Hannah"
+        ]
+      },
+      {
+        "rank": 4,
+        "players": [
+          "Julian Schönweger",
+          "Arzun",
+          "Büsra Gedik",
+          "Heinrich Wögerbauer",
+          "Ilvy Ladstätter",
+          "Sammy",
+          "Alex Weindl",
+          "Markus Myclubs",
+          "Joel",
+          "Magdalena",
+          "Nicole Myclubs",
+          "Raoul Myclubs"
+        ]
+      }
+    ]
+  },
+  {
+    "label": "29 Jan 2025",
+    "date": "2025-01-29",
+    "teams": [
+      {
+        "rank": 1,
+        "players": [
+          "Dominik Riedl",
+          "Büsra Gedik",
+          "Magdalena Malli",
+          "Carina Dillmann",
+          "Samuel Ziselsberger"
+        ]
+      },
+      {
+        "rank": 2,
+        "players": [
+          "Arzun",
+          "Marcel Hölbl",
+          "Andrea Stadler",
+          "Thomas Wanek",
+          "Kerstin Aigner",
+          "Christian Mehofer",
+          "Nina Koller"
+        ]
+      },
+      {
+        "rank": 3,
+        "players": [
+          "Laetitia Föttinger",
+          "Moritz",
+          "Flo Hermann"
+        ]
+      },
+      {
+        "rank": 4,
+        "players": [
+          "Julian Schönweger",
+          "Heinrich Wögerbauer",
+          "Dominic Petritsch",
+          "Christoph Helmut Kopka",
+          "Christopher Pietschnig",
+          "Sammy",
+          "Alex Weindl",
+          "Leon Simic"
+        ]
+      }
+    ]
+  },
+  {
+    "label": "12 Feb 2026",
+    "date": "2026-02-12",
+    "teams": [
+      {
+        "rank": 1,
+        "players": [
+          "Heinrich Wögerbauer",
+          "Silke Kögl",
+          "Christopher Pietschnig",
+          "Leon Simic",
+          "Wolfgang",
+          "Michael Myclubs"
+        ]
+      },
+      {
+        "rank": 2,
+        "players": [
+          "Arzun",
+          "Flo Kögl",
+          "Kerstin Aigner",
+          "Markus Kerstin",
+          "Adrian BabyNinja",
+          "Tobias Myclubs",
+          "Lisa Seeböck"
+        ]
+      },
+      {
+        "rank": 3,
+        "players": [
+          "Büsra Gedik",
+          "Ilvy Ladstätter",
+          "Thomas Wanek",
+          "Marco Roll",
+          "Markus Myclubs",
+          "Phoebe Myclubs",
+          "Lilli Huber"
+        ]
+      },
+      {
+        "rank": 4,
+        "players": [
+          "Dominik Riedl",
+          "Carina Dillmann",
+          "Marcel Hölbl",
+          "Andrea Stadler",
+          "Christian Mehofer",
+          "Linda Myclubs",
+          "Tanh Myclubs"
+        ]
+      }
+    ]
+  },
+  {
+    "label": "19 Feb 2026",
+    "date": "2026-02-19",
+    "teams": [
+      {
+        "rank": 1,
+        "players": [
+          "Flo Kögl",
+          "Büsra Gedik",
+          "Silke Kögl",
+          "Carina Dillmann",
+          "Thomas Wanek",
+          "Sammy",
+          "Samuel Ziselsberger"
+        ]
+      },
+      {
+        "rank": 2,
+        "players": [
+          "Dominik Riedl",
+          "Ilvy Ladstätter",
+          "Marcel Hölbl",
+          "Dominic Petritsch",
+          "Christopher Pietschnig",
+          "Lisa Seeböck"
+        ]
+      },
+      {
+        "rank": 3,
+        "players": [
+          "Julian Schönweger",
+          "Arzun",
+          "Heinrich Wögerbauer",
+          "Andrea Stadler",
+          "Christian Mehofer",
+          "Anna Thunder",
+          "Richard Ninjas"
+        ]
+      }
+    ]
+  },
+  {
+    "label": "05 Mär 2026",
+    "date": "2026-03-05",
+    "teams": [
+      {
+        "rank": 1,
+        "players": [
+          "Carina Dillmann",
+          "Laetitia Föttinger",
+          "Richard Ninjas",
+          "Matthias Marco Freund",
+          "Victor Marco Freund"
+        ]
+      },
+      {
+        "rank": 2,
+        "players": [
+          "Dominik Riedl",
+          "Julian Schönweger",
+          "Arzun",
+          "Flo Kögl",
+          "Magdalena Malli",
+          "Ilvy Ladstätter",
+          "Leon Simic"
+        ]
+      },
+      {
+        "rank": 3,
+        "players": [
+          "Christian Mehofer",
+          "Linda Myclubs",
+          "Pascal Marco Freund"
+        ]
+      },
+      {
+        "rank": 4,
+        "players": [
+          "Heinrich Wögerbauer",
+          "Silke Kögl",
+          "Marcel Hölbl",
+          "Christopher Pietschnig",
+          "Moritz",
+          "Adrian BabyNinja",
+          "Marco Roll",
+          "Emir Arzun Bruder"
+        ]
+      }
+    ]
+  },
+  {
+    "label": "12 Mär 2026",
+    "date": "2026-03-12",
+    "teams": [
+      {
+        "rank": 1,
+        "players": [
+          "Dominik Riedl",
+          "Arzun",
+          "Ilvy Ladstätter",
+          "Carina Dillmann",
+          "Thomas Wanek",
+          "Leon Simic",
+          "Marco Roll"
+        ]
+      },
+      {
+        "rank": 2,
+        "players": [
+          "Büsra Gedik",
+          "Heinrich Wögerbauer",
+          "Dominic Petritsch",
+          "Christopher Pietschnig",
+          "Adrian BabyNinja",
+          "Steve Roll"
+        ]
+      },
+      {
+        "rank": 3,
+        "players": [
+          "Flo Kögl",
+          "Silke Kögl",
+          "Laetitia Föttinger",
+          "Christoph Helmut Kopka",
+          "Sammy"
+        ]
+      }
+    ]
+  }
+]
