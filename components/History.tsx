@@ -5,6 +5,8 @@ import { Session } from '@/lib/types';
 
 interface HistoryProps {
   sessions: Session[];
+  seedCount: number;
+  onRollback: (sessionIndex: number) => void;
 }
 
 const RANK_COLORS: Record<number, string> = {
@@ -31,12 +33,14 @@ const RANK_MEDALS: Record<number, string> = {
   5: '\uD83D\uDFE3',
 };
 
-export default function History({ sessions }: HistoryProps) {
+export default function History({ sessions, seedCount, onRollback }: HistoryProps) {
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
+  const [confirmRollback, setConfirmRollback] = useState<number | null>(null);
 
-  const sorted = [...sessions].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
+  // Keep original indices so we can map back for rollback
+  const sorted = sessions
+    .map((s, i) => ({ session: s, originalIndex: i }))
+    .sort((a, b) => new Date(b.session.date).getTime() - new Date(a.session.date).getTime());
 
   const toggle = (index: number) => {
     setExpandedIds((prev) => {
@@ -58,16 +62,24 @@ export default function History({ sessions }: HistoryProps) {
     );
   }
 
+  // Find the latest user-recorded session's original index (for rollback eligibility)
+  const latestUserIndex = sessions.length > seedCount ? sessions.length - 1 : -1;
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {sorted.map((session, idx) => {
+      {sorted.map(({ session, originalIndex }, idx) => {
         const expanded = expandedIds.has(idx);
         const teamCount = session.teams.length;
         const totalPlayers = session.teams.reduce((sum, t) => sum + t.players.length, 0);
         const hasDeltas = !!session.eloDeltas;
+        const isUserSession = originalIndex >= seedCount;
+        const canRollback = isUserSession && session.preMatchPlayers && originalIndex >= seedCount;
         const rankedTeams = [...session.teams]
           .filter((t) => t.rank >= 1 && t.rank <= 5)
           .sort((a, b) => a.rank - b.rank);
+
+        // Count how many user sessions would be rolled back (this one + all after it)
+        const rollbackCount = isUserSession ? sessions.length - originalIndex : 0;
 
         return (
           <div
@@ -144,88 +156,156 @@ export default function History({ sessions }: HistoryProps) {
 
             {/* Expanded content */}
             {expanded && (
-              <div
-                style={{
-                  padding: '4px 18px 18px',
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-                  gap: 10,
-                }}
-              >
-                {rankedTeams.map((team, tIdx) => (
-                  <div
-                    key={tIdx}
-                    style={{
-                      background: '#070a13',
-                      border: `1px solid ${RANK_COLORS[team.rank] ?? '#1e2e48'}`,
-                      borderRadius: 8,
-                      padding: '12px 14px',
-                    }}
-                  >
+              <div style={{ padding: '4px 18px 18px' }}>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+                    gap: 10,
+                  }}
+                >
+                  {rankedTeams.map((team, tIdx) => (
                     <div
+                      key={tIdx}
                       style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        marginBottom: 10,
-                        borderBottom: `1px solid #1e2e48`,
-                        paddingBottom: 8,
+                        background: '#070a13',
+                        border: `1px solid ${RANK_COLORS[team.rank] ?? '#1e2e48'}`,
+                        borderRadius: 8,
+                        padding: '12px 14px',
                       }}
                     >
-                      <span style={{ fontSize: 20 }}>{RANK_MEDALS[team.rank]}</span>
-                      <span
+                      <div
                         style={{
-                          fontSize: 14,
-                          fontWeight: 700,
-                          color: RANK_COLORS[team.rank] ?? '#c8d8ec',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          marginBottom: 10,
+                          borderBottom: `1px solid #1e2e48`,
+                          paddingBottom: 8,
                         }}
                       >
-                        {RANK_LABELS[team.rank] ?? `${team.rank}th`} Place
-                      </span>
+                        <span style={{ fontSize: 20 }}>{RANK_MEDALS[team.rank]}</span>
+                        <span
+                          style={{
+                            fontSize: 14,
+                            fontWeight: 700,
+                            color: RANK_COLORS[team.rank] ?? '#c8d8ec',
+                          }}
+                        >
+                          {RANK_LABELS[team.rank] ?? `${team.rank}th`} Place
+                        </span>
+                      </div>
+                      <ul
+                        style={{
+                          listStyle: 'none',
+                          margin: 0,
+                          padding: 0,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 4,
+                        }}
+                      >
+                        {team.players.map((player, pIdx) => {
+                          const delta = session.eloDeltas?.[player];
+                          return (
+                            <li
+                              key={pIdx}
+                              style={{
+                                fontSize: 13,
+                                color: '#c8d8ec',
+                                padding: '2px 0',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                              }}
+                            >
+                              <span>{player}</span>
+                              {delta !== undefined && (
+                                <span
+                                  style={{
+                                    fontSize: 11,
+                                    fontFamily: 'var(--font-mono)',
+                                    fontWeight: 700,
+                                    color: delta > 0 ? '#2ecc71' : delta < 0 ? '#ff4757' : '#3d5270',
+                                  }}
+                                >
+                                  {delta > 0 ? '+' : ''}{delta}
+                                </span>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
                     </div>
-                    <ul
-                      style={{
-                        listStyle: 'none',
-                        margin: 0,
-                        padding: 0,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 4,
-                      }}
-                    >
-                      {team.players.map((player, pIdx) => {
-                        const delta = session.eloDeltas?.[player];
-                        return (
-                          <li
-                            key={pIdx}
-                            style={{
-                              fontSize: 13,
-                              color: '#c8d8ec',
-                              padding: '2px 0',
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                            }}
-                          >
-                            <span>{player}</span>
-                            {delta !== undefined && (
-                              <span
-                                style={{
-                                  fontSize: 11,
-                                  fontFamily: 'var(--font-mono)',
-                                  fontWeight: 700,
-                                  color: delta > 0 ? '#2ecc71' : delta < 0 ? '#ff4757' : '#3d5270',
-                                }}
-                              >
-                                {delta > 0 ? '+' : ''}{delta}
-                              </span>
-                            )}
-                          </li>
-                        );
-                      })}
-                    </ul>
+                  ))}
+                </div>
+
+                {/* Rollback button */}
+                {canRollback && (
+                  <div style={{ marginTop: 14, borderTop: '1px solid #1e2e48', paddingTop: 14 }}>
+                    {confirmRollback === originalIndex ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <span style={{ fontSize: 12, color: '#ff4757' }}>
+                          {rollbackCount > 1
+                            ? `This will undo ${rollbackCount} sessions. Are you sure?`
+                            : 'Undo this session and restore previous player state?'}
+                        </span>
+                        <button
+                          onClick={() => {
+                            onRollback(originalIndex);
+                            setConfirmRollback(null);
+                          }}
+                          style={{
+                            padding: '6px 14px',
+                            background: 'rgba(255,71,87,0.15)',
+                            border: '1px solid #ff4757',
+                            borderRadius: 6,
+                            color: '#ff4757',
+                            fontSize: 12,
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          Confirm Rollback
+                        </button>
+                        <button
+                          onClick={() => setConfirmRollback(null)}
+                          style={{
+                            padding: '6px 14px',
+                            background: 'transparent',
+                            border: '1px solid #3d5270',
+                            borderRadius: 6,
+                            color: '#3d5270',
+                            fontSize: 12,
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmRollback(originalIndex)}
+                        style={{
+                          padding: '6px 14px',
+                          background: 'transparent',
+                          border: '1px solid #3d5270',
+                          borderRadius: 6,
+                          color: '#c8d8ec',
+                          fontSize: 12,
+                          fontWeight: 500,
+                          cursor: 'pointer',
+                          transition: 'border-color 0.2s',
+                        }}
+                        onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#ff4757')}
+                        onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#3d5270')}
+                      >
+                        Rollback{rollbackCount > 1 ? ` (${rollbackCount} sessions)` : ''}
+                      </button>
+                    )}
                   </div>
-                ))}
+                )}
               </div>
             )}
           </div>

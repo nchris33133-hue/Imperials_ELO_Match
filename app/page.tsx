@@ -58,6 +58,11 @@ export default function Home() {
   const handleRecordMatch = useCallback((updatedPlayers: Player[], session: Session) => {
     setState(prev => {
       if (!prev) return prev;
+      // Save snapshot of all players before applying changes (for rollback)
+      const sessionWithSnapshot: Session = {
+        ...session,
+        preMatchPlayers: prev.players.map(p => ({ ...p })),
+      };
       // Merge updated players into the full roster
       const playerMap = new Map(updatedPlayers.map(p => [p.id, p]));
       const mergedPlayers = prev.players.map(p => {
@@ -69,10 +74,27 @@ export default function Home() {
       return {
         ...prev,
         players: mergedPlayers,
-        sessions: [...prev.sessions, session],
+        sessions: [...prev.sessions, sessionWithSnapshot],
       };
     });
   }, []);
+
+  const handleRollback = useCallback((sessionIndex: number) => {
+    setState(prev => {
+      if (!prev) return prev;
+      // sessionIndex is relative to allSessions (seed + user)
+      // User sessions start after seed sessions
+      const userIndex = sessionIndex - seedSessions.length;
+      if (userIndex < 0 || userIndex >= prev.sessions.length) return prev;
+      const session = prev.sessions[userIndex];
+      if (!session.preMatchPlayers) return prev;
+      return {
+        ...prev,
+        players: session.preMatchPlayers,
+        sessions: prev.sessions.slice(0, userIndex),
+      };
+    });
+  }, [seedSessions.length]);
 
   const handleReset = useCallback(() => {
     const seedPlayers = normalizePlayers(seedPlayersRaw);
@@ -142,7 +164,7 @@ export default function Home() {
         />
       )}
       {activeTab === 'history' && (
-        <History sessions={allSessions} />
+        <History sessions={allSessions} seedCount={seedSessions.length} onRollback={handleRollback} />
       )}
       {activeTab === 'settings' && (
         <SettingsPanel

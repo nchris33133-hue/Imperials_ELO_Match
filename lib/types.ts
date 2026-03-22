@@ -36,6 +36,8 @@ export interface Session {
   pointGains?: Record<string, number>;
   /** LMS finishers: [male 1st, male 2nd, female 1st, female 2nd] */
   lms?: [string | null, string | null, string | null, string | null];
+  /** Snapshot of all players before this match was applied (for rollback) */
+  preMatchPlayers?: Player[];
 }
 
 export interface Settings {
