@@ -22,6 +22,15 @@ export interface Player {
   streak: number;
 }
 
+export interface TeamChangeEntry {
+  type: 'move' | 'remove' | 'add';
+  player: string;
+  from?: string;
+  to?: string;
+  reason: string;
+  timestamp: string;
+}
+
 export interface SessionTeam {
   rank: 1 | 2 | 3 | 4 | 5;
   players: string[];
@@ -38,6 +47,8 @@ export interface Session {
   lms?: [string | null, string | null, string | null, string | null];
   /** Snapshot of all players before this match was applied (for rollback) */
   preMatchPlayers?: Player[];
+  /** Audit log of manual team changes made after balancing */
+  manualChanges?: TeamChangeEntry[];
 }
 
 export interface Settings {

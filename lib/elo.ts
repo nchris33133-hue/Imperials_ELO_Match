@@ -74,7 +74,8 @@ export function applyMatchResults(
   placements: number[],
   label: string,
   settings: Settings,
-  lmsFinishers: [string | null, string | null, string | null, string | null] = [null, null, null, null]
+  lmsFinishers: [string | null, string | null, string | null, string | null] = [null, null, null, null],
+  manualChanges: import('@/lib/types').TeamChangeEntry[] = []
 ): { players: Player[]; session: Session; deltas: Record<string, number> } {
   // Compute effective ELO per team
   const minSize = Math.min(...teams.map(t => t.length));
@@ -177,6 +178,7 @@ export function applyMatchResults(
     eloDeltas: deltas,
     pointGains,
     lms: lmsFinishers,
+    ...(manualChanges.length > 0 ? { manualChanges } : {}),
   };
 
   return { players: updatedPlayers, session, deltas };

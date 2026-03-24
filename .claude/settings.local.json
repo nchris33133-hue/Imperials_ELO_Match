@@ -25,7 +25,10 @@
       "Bash(taskkill:*)",
       "Bash(node:*)",
       "Bash(unzip -l \"C:/Users/Chris/Desktop/Team builder/Social League Rankings \\(import\\).xlsx\")",
-      "Bash(unzip:*)"
+      "Bash(unzip:*)",
+      "Bash(gh auth:*)",
+      "Bash(npx vercel:*)",
+      "Bash(find 'C:\\\\Users\\\\Chris\\\\Desktop\\\\Team builder' -name tailwind.config.* -o -name next.config.*)"
     ]
   }
 }

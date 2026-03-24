@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { isProvisional, vetLevel, teamEffectiveElo, applyMatchResults, previewMatchDeltas } from '@/lib/elo';
 import { balanceNTeams } from '@/lib/balancer';
 import { generateTeamNames, regenerateTeamNames } from '@/lib/teamNames';
-import type { Player, Session, Settings } from '@/lib/types';
+import type { Player, Session, Settings, TeamChangeEntry } from '@/lib/types';
 
 const TEAM_COLORS = ['#00b4d8', '#ff4757', '#2ecc71', '#f39c12', '#cc80ff'];
 
@@ -40,6 +40,19 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
   const [lmsFemale1st, setLmsFemale1st] = useState<string | null>(null);
   const [lmsFemale2nd, setLmsFemale2nd] = useState<string | null>(null);
 
+  // Audit log for manual team changes
+  const [manualChanges, setManualChanges] = useState<TeamChangeEntry[]>([]);
+  const [pendingChange, setPendingChange] = useState<{
+    type: 'move' | 'remove' | 'add';
+    playerId: number;
+    playerName: string;
+    fromTeam?: number;
+    toTeam?: number;
+    fromTeamName?: string;
+    toTeamName?: string;
+  } | null>(null);
+  const [changeReason, setChangeReason] = useState('');
+
   const filteredPlayers = useMemo(
     () =>
       players.filter((p) =>
@@ -73,6 +86,7 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
     setMatchMode(false);
     setPlacements(new Array(teamCount).fill(0));
     setSessionLabel(`Session ${sessionCount + 1}`);
+    setManualChanges([]);
   };
 
   const handleRegenerate = () => {
@@ -83,6 +97,7 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
     setTeamNames(regenerateTeamNames(teamCount));
     setMatchMode(false);
     setPlacements(new Array(teamCount).fill(0));
+    setManualChanges([]);
   };
 
   const handleStartMatch = () => {
@@ -137,7 +152,8 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
       placements,
       label,
       settings,
-      [lmsMale1st, lmsMale2nd, lmsFemale1st, lmsFemale2nd]
+      [lmsMale1st, lmsMale2nd, lmsFemale1st, lmsFemale2nd],
+      manualChanges
     );
     onRecordMatch(updatedPlayers, session);
     setTeams(null);
@@ -145,6 +161,7 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
     setSelected(new Set());
     setPlacements([]);
     setShowConfirm(false);
+    setManualChanges([]);
   };
 
   const getStatusTags = (player: Player) => {
@@ -165,39 +182,102 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
     return players.filter(p => !inTeam.has(p.id));
   }, [teams, players]);
 
-  const handleMovePlayer = (playerId: number, fromTeam: number, toTeam: number) => {
+  // Request a manual change — opens the justification modal
+  const requestMovePlayer = (playerId: number, fromTeam: number, toTeam: number) => {
     if (!teams || fromTeam === toTeam) return;
     const player = teams[fromTeam].find(p => p.id === playerId);
     if (!player) return;
-    setTeams(prev => {
-      if (!prev) return prev;
-      const next = prev.map(t => [...t]);
-      next[fromTeam] = next[fromTeam].filter(p => p.id !== playerId);
-      next[toTeam] = [...next[toTeam], player];
-      return next;
+    setPendingChange({
+      type: 'move',
+      playerId,
+      playerName: player.name,
+      fromTeam,
+      toTeam,
+      fromTeamName: teamNames[fromTeam] || `Team ${fromTeam + 1}`,
+      toTeamName: teamNames[toTeam] || `Team ${toTeam + 1}`,
     });
+    setChangeReason('');
   };
 
-  const handleRemoveFromTeam = (playerId: number, teamIndex: number) => {
+  const requestRemoveFromTeam = (playerId: number, teamIndex: number) => {
     if (!teams) return;
-    setTeams(prev => {
-      if (!prev) return prev;
-      const next = prev.map(t => [...t]);
-      next[teamIndex] = next[teamIndex].filter(p => p.id !== playerId);
-      return next;
+    const player = teams[teamIndex].find(p => p.id === playerId);
+    if (!player) return;
+    setPendingChange({
+      type: 'remove',
+      playerId,
+      playerName: player.name,
+      fromTeam: teamIndex,
+      fromTeamName: teamNames[teamIndex] || `Team ${teamIndex + 1}`,
     });
+    setChangeReason('');
   };
 
-  const handleAddToTeam = (playerId: number, teamIndex: number) => {
+  const requestAddToTeam = (playerId: number, teamIndex: number) => {
     if (!teams) return;
     const player = players.find(p => p.id === playerId);
     if (!player) return;
-    setTeams(prev => {
-      if (!prev) return prev;
-      const next = prev.map(t => [...t]);
-      next[teamIndex] = [...next[teamIndex], player];
-      return next;
+    setPendingChange({
+      type: 'add',
+      playerId,
+      playerName: player.name,
+      toTeam: teamIndex,
+      toTeamName: teamNames[teamIndex] || `Team ${teamIndex + 1}`,
     });
+    setChangeReason('');
+  };
+
+  // Apply the pending change after justification is provided
+  const confirmPendingChange = () => {
+    if (!pendingChange || !changeReason.trim()) return;
+
+    const entry: TeamChangeEntry = {
+      type: pendingChange.type,
+      player: pendingChange.playerName,
+      reason: changeReason.trim(),
+      timestamp: new Date().toISOString(),
+    };
+
+    if (pendingChange.type === 'move') {
+      entry.from = pendingChange.fromTeamName;
+      entry.to = pendingChange.toTeamName;
+      setTeams(prev => {
+        if (!prev) return prev;
+        const player = prev[pendingChange.fromTeam!].find(p => p.id === pendingChange.playerId);
+        if (!player) return prev;
+        const next = prev.map(t => [...t]);
+        next[pendingChange.fromTeam!] = next[pendingChange.fromTeam!].filter(p => p.id !== pendingChange.playerId);
+        next[pendingChange.toTeam!] = [...next[pendingChange.toTeam!], player];
+        return next;
+      });
+    } else if (pendingChange.type === 'remove') {
+      entry.from = pendingChange.fromTeamName;
+      setTeams(prev => {
+        if (!prev) return prev;
+        const next = prev.map(t => [...t]);
+        next[pendingChange.fromTeam!] = next[pendingChange.fromTeam!].filter(p => p.id !== pendingChange.playerId);
+        return next;
+      });
+    } else if (pendingChange.type === 'add') {
+      entry.to = pendingChange.toTeamName;
+      const player = players.find(p => p.id === pendingChange.playerId);
+      if (!player) return;
+      setTeams(prev => {
+        if (!prev) return prev;
+        const next = prev.map(t => [...t]);
+        next[pendingChange.toTeam!] = [...next[pendingChange.toTeam!], player];
+        return next;
+      });
+    }
+
+    setManualChanges(prev => [...prev, entry]);
+    setPendingChange(null);
+    setChangeReason('');
+  };
+
+  const cancelPendingChange = () => {
+    setPendingChange(null);
+    setChangeReason('');
   };
 
   // Compute summary data when teams exist
@@ -687,7 +767,7 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
                                   value=""
                                   onChange={(e) => {
                                     const toTeam = Number(e.target.value);
-                                    if (!isNaN(toTeam)) handleMovePlayer(p.id, i, toTeam);
+                                    if (!isNaN(toTeam)) requestMovePlayer(p.id, i, toTeam);
                                   }}
                                   className="text-[10px] rounded px-1 py-0.5 outline-none"
                                   style={{
@@ -708,7 +788,7 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
                                   )}
                                 </select>
                                 <button
-                                  onClick={() => handleRemoveFromTeam(p.id, i)}
+                                  onClick={() => requestRemoveFromTeam(p.id, i)}
                                   className="text-[10px] font-bold rounded px-1.5 py-0.5 transition-opacity hover:opacity-80"
                                   style={{
                                     backgroundColor: 'rgba(255,71,87,0.15)',
@@ -733,7 +813,7 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
                           value=""
                           onChange={(e) => {
                             const pid = Number(e.target.value);
-                            if (!isNaN(pid)) handleAddToTeam(pid, i);
+                            if (!isNaN(pid)) requestAddToTeam(pid, i);
                           }}
                           className="w-full text-xs rounded px-2 py-1.5 outline-none"
                           style={{
@@ -850,6 +930,65 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
             </div>
           </div>
 
+          {/* Manual changes audit log */}
+          {manualChanges.length > 0 && (
+            <div
+              className="rounded-lg px-4 py-3 flex flex-col gap-2"
+              style={{
+                backgroundColor: '#0c1220',
+                border: '1px solid rgba(243,156,18,0.3)',
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <span
+                  className="text-xs font-bold px-2 py-0.5 rounded"
+                  style={{ backgroundColor: 'rgba(243,156,18,0.15)', color: '#f39c12' }}
+                >
+                  CHANGES LOG
+                </span>
+                <span className="text-[10px]" style={{ color: '#3d5270' }}>
+                  {manualChanges.length} manual {manualChanges.length === 1 ? 'change' : 'changes'}
+                </span>
+              </div>
+              <div className="flex flex-col gap-1.5 max-h-[160px] overflow-y-auto">
+                {manualChanges.map((change, idx) => (
+                  <div
+                    key={idx}
+                    className="flex flex-col gap-0.5 px-3 py-2 rounded"
+                    style={{ backgroundColor: '#070a13', border: '1px solid #1e2e48' }}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span
+                        className="text-[10px] font-bold px-1.5 py-0.5 rounded uppercase"
+                        style={{
+                          backgroundColor:
+                            change.type === 'move' ? 'rgba(0,180,216,0.15)' :
+                            change.type === 'add' ? 'rgba(46,204,113,0.15)' :
+                            'rgba(255,71,87,0.15)',
+                          color:
+                            change.type === 'move' ? '#00b4d8' :
+                            change.type === 'add' ? '#2ecc71' :
+                            '#ff4757',
+                        }}
+                      >
+                        {change.type}
+                      </span>
+                      <span className="text-xs" style={{ color: '#c8d8ec' }}>
+                        <strong>{change.player}</strong>
+                        {change.type === 'move' && <> from {change.from} to {change.to}</>}
+                        {change.type === 'remove' && <> from {change.from}</>}
+                        {change.type === 'add' && <> to {change.to}</>}
+                      </span>
+                    </div>
+                    <span className="text-[11px] italic" style={{ color: '#3d5270' }}>
+                      &ldquo;{change.reason}&rdquo;
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Action buttons */}
           {!matchMode ? (
             <div className="flex gap-3">
@@ -932,6 +1071,120 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {/* Justification modal for manual changes */}
+      {pendingChange && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: 16,
+          }}
+          onClick={(e) => { if (e.target === e.currentTarget) cancelPendingChange(); }}
+        >
+          <div
+            className="w-full max-w-md rounded-xl flex flex-col gap-4"
+            style={{
+              backgroundColor: '#0c1220',
+              border: '1px solid #1e2e48',
+              padding: 24,
+              boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+            }}
+          >
+            <div className="flex items-center gap-2">
+              <span
+                className="text-xs font-bold px-2 py-0.5 rounded uppercase"
+                style={{
+                  backgroundColor:
+                    pendingChange.type === 'move' ? 'rgba(0,180,216,0.15)' :
+                    pendingChange.type === 'add' ? 'rgba(46,204,113,0.15)' :
+                    'rgba(255,71,87,0.15)',
+                  color:
+                    pendingChange.type === 'move' ? '#00b4d8' :
+                    pendingChange.type === 'add' ? '#2ecc71' :
+                    '#ff4757',
+                }}
+              >
+                {pendingChange.type}
+              </span>
+              <span className="text-sm font-semibold" style={{ color: '#c8d8ec' }}>
+                Manual Change
+              </span>
+            </div>
+
+            <p className="text-sm" style={{ color: '#c8d8ec' }}>
+              {pendingChange.type === 'move' && (
+                <>Move <strong>{pendingChange.playerName}</strong> from <strong>{pendingChange.fromTeamName}</strong> to <strong>{pendingChange.toTeamName}</strong></>
+              )}
+              {pendingChange.type === 'remove' && (
+                <>Remove <strong>{pendingChange.playerName}</strong> from <strong>{pendingChange.fromTeamName}</strong></>
+              )}
+              {pendingChange.type === 'add' && (
+                <>Add <strong>{pendingChange.playerName}</strong> to <strong>{pendingChange.toTeamName}</strong></>
+              )}
+            </p>
+
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium" style={{ color: '#3d5270' }}>
+                Justification (required)
+              </label>
+              <textarea
+                value={changeReason}
+                onChange={(e) => setChangeReason(e.target.value)}
+                placeholder="Why is this change needed?"
+                rows={3}
+                autoFocus
+                className="w-full px-3 py-2 rounded-lg text-sm outline-none resize-none"
+                style={{
+                  backgroundColor: '#121b2e',
+                  border: '1px solid #1e2e48',
+                  color: '#c8d8ec',
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey && changeReason.trim()) {
+                    e.preventDefault();
+                    confirmPendingChange();
+                  }
+                }}
+              />
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={cancelPendingChange}
+                className="flex-1 py-2.5 rounded-lg text-sm font-bold transition-all"
+                style={{
+                  backgroundColor: 'transparent',
+                  color: '#c8d8ec',
+                  border: '1px solid #1e2e48',
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmPendingChange}
+                disabled={!changeReason.trim()}
+                className="flex-1 py-2.5 rounded-lg text-sm font-bold transition-all"
+                style={{
+                  backgroundColor: changeReason.trim() ? '#F5C518' : '#1e2e48',
+                  color: changeReason.trim() ? '#070a13' : '#3d5270',
+                  cursor: changeReason.trim() ? 'pointer' : 'not-allowed',
+                }}
+              >
+                Confirm Change
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

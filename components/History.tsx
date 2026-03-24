@@ -239,6 +239,88 @@ export default function History({ sessions, seedCount, onRollback }: HistoryProp
                   ))}
                 </div>
 
+                {/* Manual changes audit log */}
+                {session.manualChanges && session.manualChanges.length > 0 && (
+                  <div
+                    style={{
+                      marginTop: 12,
+                      padding: '12px 14px',
+                      background: '#070a13',
+                      border: '1px solid rgba(243,156,18,0.25)',
+                      borderRadius: 8,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 700,
+                          padding: '2px 6px',
+                          borderRadius: 4,
+                          backgroundColor: 'rgba(243,156,18,0.12)',
+                          color: '#f39c12',
+                        }}
+                      >
+                        MANUAL CHANGES
+                      </span>
+                      <span style={{ fontSize: 11, color: '#3d5270' }}>
+                        {session.manualChanges.length} {session.manualChanges.length === 1 ? 'change' : 'changes'}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      {session.manualChanges.map((change, cIdx) => (
+                        <div
+                          key={cIdx}
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 3,
+                            padding: '8px 10px',
+                            background: '#0c1220',
+                            borderRadius: 6,
+                            borderLeft: `3px solid ${
+                              change.type === 'move' ? '#00b4d8' :
+                              change.type === 'add' ? '#2ecc71' :
+                              '#ff4757'
+                            }`,
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span
+                              style={{
+                                fontSize: 9,
+                                fontWeight: 700,
+                                padding: '1px 5px',
+                                borderRadius: 3,
+                                textTransform: 'uppercase',
+                                backgroundColor:
+                                  change.type === 'move' ? 'rgba(0,180,216,0.15)' :
+                                  change.type === 'add' ? 'rgba(46,204,113,0.15)' :
+                                  'rgba(255,71,87,0.15)',
+                                color:
+                                  change.type === 'move' ? '#00b4d8' :
+                                  change.type === 'add' ? '#2ecc71' :
+                                  '#ff4757',
+                              }}
+                            >
+                              {change.type}
+                            </span>
+                            <span style={{ fontSize: 12, color: '#c8d8ec' }}>
+                              <strong>{change.player}</strong>
+                              {change.type === 'move' && <>{' '}from {change.from} to {change.to}</>}
+                              {change.type === 'remove' && <>{' '}from {change.from}</>}
+                              {change.type === 'add' && <>{' '}to {change.to}</>}
+                            </span>
+                          </div>
+                          <span style={{ fontSize: 11, color: '#3d5270', fontStyle: 'italic' }}>
+                            &ldquo;{change.reason}&rdquo;
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Rollback button */}
                 {canRollback && (
                   <div style={{ marginTop: 14, borderTop: '1px solid #1e2e48', paddingTop: 14 }}>
