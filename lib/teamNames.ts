@@ -1,92 +1,72 @@
 /**
- * Random team name generator — themed, color-coded, and rotating.
- * Each color slot has multiple themed pools that cycle on each balance.
+ * Random team name generator — combines a front word (color-coded) with a back word.
  */
 
-// Cyan / Blue — slot 0
-const CYAN_NAMES = [
-  // Pokemon
-  'Squirtle Squad', 'Vaporeon Vibes', 'Kyogre Krew', 'Glaceon Gang', 'Lapras Legends',
-  // Anime
-  'Blue Exorcists', 'Aqua Konosuba', 'Tanjiro Tides', 'Rem Supremacy', 'Spirit Detectives',
-  // Pop culture
-  'Heisenberg Blue', 'Avatar State', 'Na\'vi Nation', 'Ice Ice Baby', 'Blue Shells',
-  // Vibe
-  'Certified Chill', 'Main Characters', 'Touch Grass FC', 'No Thoughts Blue', 'Ctrl+Z Energy',
+export interface TeamNameResult {
+  name: string;
+  color: string;
+}
+
+const FRONT_WORDS: { word: string; color: string }[] = [
+  // Red
+  { word: 'Ember', color: '#ff4757' },
+  { word: 'Blaze', color: '#ff4757' },
+  { word: 'Crimson', color: '#ff4757' },
+  { word: 'Charmander', color: '#ff4757' },
+  // Blue
+  { word: 'Cobalt', color: '#00b4d8' },
+  { word: 'Frost', color: '#00b4d8' },
+  { word: 'Squirtle', color: '#00b4d8' },
+  { word: 'Tide', color: '#00b4d8' },
+  // Black
+  { word: 'Onyx', color: '#8a9bb5' },
+  { word: 'Shadow', color: '#8a9bb5' },
+  { word: 'Raven', color: '#8a9bb5' },
+  { word: 'Umbreon', color: '#8a9bb5' },
+  // White
+  { word: 'Ghost', color: '#e8edf3' },
+  { word: 'Blizzard', color: '#e8edf3' },
+  { word: 'Ivory', color: '#e8edf3' },
+  { word: 'Togekiss', color: '#e8edf3' },
+  // Purple
+  { word: 'Venom', color: '#cc80ff' },
+  { word: 'Mystic', color: '#cc80ff' },
+  { word: 'Dusk', color: '#cc80ff' },
+  { word: 'Gengar', color: '#cc80ff' },
 ];
 
-// Red — slot 1
-const RED_NAMES = [
-  // Pokemon
-  'Charizard Chaos', 'Team Magma', 'Blaziken Blitz', 'Flareon Fury', 'Groudon Grindset',
-  // Anime
-  'Akatsuki Rejects', 'Red Riot', 'Crimson Titans', 'Itachi Did Nothing Wrong', 'Power of Friendship',
-  // Pop culture
-  'Red Wedding FC', 'Sith Happens', 'Cherry Bomb', 'Red Flags United', 'Netflix & Dodge',
-  // Vibe
-  'Unhinged Energy', 'Rent Free FC', 'Caught in 4K', 'Red Pill Dodgers', 'No Chill Zone',
+const BACK_WORDS = [
+  'Cannons', 'Blitz', 'Strike', 'Surge', 'Assault',
+  'Guns', 'Blades', 'Shields', 'Bolts', 'Arrows',
+  'Squad', 'Gang', 'Mob', 'Crew', 'Posse',
+  'Troopers', 'Renegades', 'Raiders', 'Chaos', 'Force',
 ];
 
-// Green — slot 2
-const GREEN_NAMES = [
-  // Pokemon
-  'Bulbasaur Bunch', 'Sceptile Strikers', 'Leafeon Lads', 'Rayquaza Raid', 'Treecko Troop',
-  // Anime
-  'Tatsumaki Tornado', 'Green Naruto', 'Zoro Got Lost Again', 'Deku Does His Best', 'Broly Mode',
-  // Pop culture
-  'Shrek is Love', 'Yoda Younglings', 'Green Goblin Mode', 'Grass Touchers', 'Pickle Rick FC',
-  // Vibe
-  'Delulu is the Solulu', 'Slay & Display', 'Chronically Online', 'It\'s Giving Green', 'Toxic Trait FC',
-];
-
-// Orange — slot 3
-const ORANGE_NAMES = [
-  // Pokemon
-  'Dragonite Dynasty', 'Arcanine Army', 'Infernape Impact', 'Charmander Chads', 'Rapidash Rush',
-  // Anime
-  'Naruto Runners', 'One Punch Squad', 'Chainsaw Devils', 'DBZ Filler Arc', 'Talk no Jutsu',
-  // Pop culture
-  'Cheeto Dusted', 'Orange is the New W', 'Nemo Found Us', 'Firefox FC', 'Fanta Menace',
-  // Vibe
-  'NPC Energy', 'Vibe Check FC', 'Living Their Best Life', 'Emotional Damage', 'Trust the Process',
-];
-
-// Purple — slot 4
-const PURPLE_NAMES = [
-  // Pokemon
-  'Gengar Gang', 'Mewtwo Mindset', 'Espeon Elites', 'Mismagius Mystics', 'Shadow Ball Senders',
-  // Anime
-  'Gojo Stans', 'Frieza Force', 'Purple Haze JoJo', 'Beerus Destroyers', 'Sasuke Left the Chat',
-  // Pop culture
-  'Thanos Snapped', 'Purple Rain FC', 'Grape Ape Mode', 'Purple Reign', 'Lean Team Supreme',
-  // Vibe
-  'Understood the Assignment', 'Ate & Left No Crumbs', 'Serotonin Squad', 'Galaxy Brain FC', 'Era: Winning',
-];
-
-const ALL_POOLS = [CYAN_NAMES, RED_NAMES, GREEN_NAMES, ORANGE_NAMES, PURPLE_NAMES];
-
-let cycleCounter = 0;
-
-/**
- * Generate team names for N teams. Each call cycles to new names.
- * Returns an array of N names, one per team slot (color-matched).
- */
-export function generateTeamNames(teamCount: number): string[] {
-  const names: string[] = [];
-  for (let i = 0; i < teamCount; i++) {
-    const pool = ALL_POOLS[i % ALL_POOLS.length];
-    const index = (cycleCounter + i) % pool.length;
-    names.push(pool[index]);
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
   }
-  cycleCounter++;
-  return names;
+  return a;
 }
 
 /**
- * Regenerate names — advances the cycle counter by a larger step
- * to avoid near-repeats on consecutive regenerates.
+ * Generate team names for N teams.
+ * Picks N random front words (no duplicates) and pairs each with a random back word.
  */
-export function regenerateTeamNames(teamCount: number): string[] {
-  cycleCounter += 3;
+export function generateTeamNames(teamCount: number): TeamNameResult[] {
+  const fronts = shuffle(FRONT_WORDS).slice(0, teamCount);
+  const backs = shuffle(BACK_WORDS);
+  return fronts.map((f, i) => ({
+    name: `${f.word} ${backs[i % backs.length]}`,
+    color: f.color,
+  }));
+}
+
+/**
+ * Regenerate names — just generates a fresh random set.
+ */
+export function regenerateTeamNames(teamCount: number): TeamNameResult[] {
   return generateTeamNames(teamCount);
 }

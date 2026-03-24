@@ -3,10 +3,8 @@
 import { useState, useMemo } from 'react';
 import { isProvisional, vetLevel, teamEffectiveElo, applyMatchResults, previewMatchDeltas } from '@/lib/elo';
 import { balanceNTeams } from '@/lib/balancer';
-import { generateTeamNames, regenerateTeamNames } from '@/lib/teamNames';
+import { generateTeamNames, regenerateTeamNames, type TeamNameResult } from '@/lib/teamNames';
 import type { Player, Session, Settings, TeamChangeEntry } from '@/lib/types';
-
-const TEAM_COLORS = ['#00b4d8', '#ff4757', '#2ecc71', '#f39c12', '#cc80ff'];
 
 const RANK_LABELS: Record<number, string> = {
   1: '1st',
@@ -28,7 +26,7 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
   const [teamCount, setTeamCount] = useState(2);
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [teams, setTeams] = useState<Player[][] | null>(null);
-  const [teamNames, setTeamNames] = useState<string[]>([]);
+  const [teamNames, setTeamNames] = useState<TeamNameResult[]>([]);
 
   // Match mode state
   const [matchMode, setMatchMode] = useState(false);
@@ -153,7 +151,8 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
       label,
       settings,
       [lmsMale1st, lmsMale2nd, lmsFemale1st, lmsFemale2nd],
-      manualChanges
+      manualChanges,
+      teamNames.map(t => ({ name: t.name, color: t.color }))
     );
     onRecordMatch(updatedPlayers, session);
     setTeams(null);
@@ -193,8 +192,8 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
       playerName: player.name,
       fromTeam,
       toTeam,
-      fromTeamName: teamNames[fromTeam] || `Team ${fromTeam + 1}`,
-      toTeamName: teamNames[toTeam] || `Team ${toTeam + 1}`,
+      fromTeamName: teamNames[fromTeam]?.name || `Team ${fromTeam + 1}`,
+      toTeamName: teamNames[toTeam]?.name || `Team ${toTeam + 1}`,
     });
     setChangeReason('');
   };
@@ -208,7 +207,7 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
       playerId,
       playerName: player.name,
       fromTeam: teamIndex,
-      fromTeamName: teamNames[teamIndex] || `Team ${teamIndex + 1}`,
+      fromTeamName: teamNames[teamIndex]?.name || `Team ${teamIndex + 1}`,
     });
     setChangeReason('');
   };
@@ -222,7 +221,7 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
       playerId,
       playerName: player.name,
       toTeam: teamIndex,
-      toTeamName: teamNames[teamIndex] || `Team ${teamIndex + 1}`,
+      toTeamName: teamNames[teamIndex]?.name || `Team ${teamIndex + 1}`,
     });
     setChangeReason('');
   };
@@ -639,7 +638,7 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
           {/* Team cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {teams.map((team, i) => {
-              const color = TEAM_COLORS[i % TEAM_COLORS.length];
+              const color = teamNames[i]?.color || '#c8d8ec';
               const mCount = team.filter((p) => p.gender === 'M').length;
               const fCount = team.filter((p) => p.gender === 'F').length;
               const currentPlacement = placements[i] || 0;
@@ -662,10 +661,20 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
                     }}
                   >
                     <span
-                      className="text-sm font-bold"
+                      className="text-sm font-bold flex items-center gap-2"
                       style={{ color }}
                     >
-                      {teamNames[i] || `Team ${i + 1}`}
+                      <span
+                        style={{
+                          width: 10,
+                          height: 10,
+                          borderRadius: '50%',
+                          backgroundColor: color,
+                          display: 'inline-block',
+                          flexShrink: 0,
+                        }}
+                      />
+                      {teamNames[i]?.name || `Team ${i + 1}`}
                     </span>
                     <div className="flex items-center gap-3">
                       <span
@@ -782,7 +791,7 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
                                   {teams.map((_, ti) =>
                                     ti !== i ? (
                                       <option key={ti} value={ti}>
-                                        {teamNames[ti] || `Team ${ti + 1}`}
+                                        {teamNames[ti]?.name || `Team ${ti + 1}`}
                                       </option>
                                     ) : null
                                   )}

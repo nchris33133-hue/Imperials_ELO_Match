@@ -184,15 +184,32 @@ export default function History({ sessions, seedCount, onRollback }: HistoryProp
                         }}
                       >
                         <span style={{ fontSize: 20 }}>{RANK_MEDALS[team.rank]}</span>
-                        <span
-                          style={{
-                            fontSize: 14,
-                            fontWeight: 700,
-                            color: RANK_COLORS[team.rank] ?? '#c8d8ec',
-                          }}
-                        >
-                          {RANK_LABELS[team.rank] ?? `${team.rank}th`} Place
-                        </span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                          <span
+                            style={{
+                              fontSize: 14,
+                              fontWeight: 700,
+                              color: RANK_COLORS[team.rank] ?? '#c8d8ec',
+                            }}
+                          >
+                            {RANK_LABELS[team.rank] ?? `${team.rank}th`} Place
+                          </span>
+                          {team.name && (
+                            <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11, color: '#8a9bb5' }}>
+                              <span
+                                style={{
+                                  width: 8,
+                                  height: 8,
+                                  borderRadius: '50%',
+                                  backgroundColor: team.color || '#c8d8ec',
+                                  display: 'inline-block',
+                                  flexShrink: 0,
+                                }}
+                              />
+                              {team.name}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <ul
                         style={{

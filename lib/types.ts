@@ -34,6 +34,8 @@ export interface TeamChangeEntry {
 export interface SessionTeam {
   rank: 1 | 2 | 3 | 4 | 5;
   players: string[];
+  name?: string;
+  color?: string;
 }
 
 export interface Session {
