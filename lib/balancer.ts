@@ -7,29 +7,69 @@ export function balanceNTeams(players: Player[], n: number, settings: Settings):
   const extras = total % n;
   const teamSizes = Array.from({ length: n }, (_, i) => base + (i < extras ? 1 : 0));
 
-  const gw = settings.genderWeight;
-  const scored = [...players]
-    .map(p => ({ ...p, _s: p.elo + (p.gender === 'M' ? gw : -gw) }))
-    .sort((a, b) => b._s - a._s);
-
-  const women = scored.filter(p => p.gender === 'F');
-  const men = scored.filter(p => p.gender === 'M');
+  const women = [...players].filter(p => p.gender === 'F').sort((a, b) => b.elo - a.elo);
+  const men = [...players].filter(p => p.gender === 'M').sort((a, b) => b.elo - a.elo);
 
   const teams: Player[][] = Array.from({ length: n }, () => []);
-  for (let i = 0; i < women.length; i++) {
+
+  // --- Step 1: Distribute men via snake draft to get initial ELO spread ---
+  for (let i = 0; i < men.length; i++) {
     const round = Math.floor(i / n);
     const pos = round % 2 === 0 ? (i % n) : (n - 1 - (i % n));
-    teams[pos].push(women[i]);
+    if (teams[pos].length < teamSizes[pos]) {
+      teams[pos].push(men[i]);
+    } else {
+      // Find team with room that has lowest ELO
+      const open = teams
+        .map((t, idx) => ({ idx, room: teamSizes[idx] - t.length, elo: teamEffectiveElo(t, false, settings) }))
+        .filter(x => x.room > 0)
+        .sort((a, b) => a.elo - b.elo);
+      if (open.length) teams[open[0].idx].push(men[i]);
+    }
   }
 
-  const remaining = [...men];
-  while (remaining.length) {
+  // --- Step 2: Determine female allocation — stronger teams get more females ---
+  const femaleBase = Math.floor(women.length / n);
+  const femaleExtras = women.length % n;
+  // Rank teams by average ELO (descending) — strongest teams get the extra females
+  const teamsByStrength = teams
+    .map((t, i) => ({ i, avgElo: t.length ? t.reduce((s, p) => s + p.elo, 0) / t.length : 0 }))
+    .sort((a, b) => b.avgElo - a.avgElo);
+  const femaleSlots = Array(n).fill(femaleBase);
+  for (let e = 0; e < femaleExtras; e++) {
+    femaleSlots[teamsByStrength[e].i]++;
+  }
+
+  // --- Step 3: Assign females to teams, strongest first ---
+  const strengthOrder = teamsByStrength.map(t => t.i);
+  const displaced: Player[] = [];
+  let wIdx = 0;
+  for (const ti of strengthOrder) {
+    const count = femaleSlots[ti];
+    // Remove men from this team to make room for females
+    while (teams[ti].length + count > teamSizes[ti] && teams[ti].length > 0) {
+      const weakest = teams[ti]
+        .map((p, pi) => ({ p, pi }))
+        .filter(x => x.p.gender === 'M')
+        .sort((a, b) => a.p.elo - b.p.elo)[0];
+      if (!weakest) break;
+      teams[ti].splice(weakest.pi, 1);
+      displaced.push(weakest.p);
+    }
+    for (let f = 0; f < count && wIdx < women.length; f++) {
+      teams[ti].push(women[wIdx++]);
+    }
+  }
+
+  // --- Step 4: Fill displaced men into teams with open slots (lowest ELO first) ---
+  displaced.sort((a, b) => b.elo - a.elo);
+  for (const m of displaced) {
     const open = teams
       .map((t, i) => ({ i, room: teamSizes[i] - t.length, elo: teamEffectiveElo(t, false, settings) }))
       .filter(x => x.room > 0)
       .sort((a, b) => a.elo - b.elo);
     if (!open.length) break;
-    teams[open[0].i].push(remaining.shift()!);
+    teams[open[0].i].push(m);
   }
 
   const cost = (ts: Player[][]): number => {
