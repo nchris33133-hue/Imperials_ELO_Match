@@ -51,12 +51,25 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+// Group front words by color so we can enforce one color per team
+const COLOR_GROUPS = new Map<string, { word: string; color: string }[]>();
+for (const fw of FRONT_WORDS) {
+  if (!COLOR_GROUPS.has(fw.color)) COLOR_GROUPS.set(fw.color, []);
+  COLOR_GROUPS.get(fw.color)!.push(fw);
+}
+const ALL_COLORS = Array.from(COLOR_GROUPS.keys());
+
 /**
  * Generate team names for N teams.
- * Picks N random front words (no duplicates) and pairs each with a random back word.
+ * Each team gets a unique color — one random front word picked per color group.
  */
 export function generateTeamNames(teamCount: number): TeamNameResult[] {
-  const fronts = shuffle(FRONT_WORDS).slice(0, teamCount);
+  // Pick N distinct colors, then one random word from each color group
+  const colors = shuffle(ALL_COLORS).slice(0, teamCount);
+  const fronts = colors.map(c => {
+    const group = COLOR_GROUPS.get(c)!;
+    return group[Math.floor(Math.random() * group.length)];
+  });
   const backs = shuffle(BACK_WORDS);
   return fronts.map((f, i) => ({
     name: `${f.word} ${backs[i % backs.length]}`,
