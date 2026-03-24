@@ -169,19 +169,19 @@ export default function Rankings({ players, settings, sessions }: RankingsProps)
             >
               {player.gender}
             </span>
-            {provisional && (
-              <span className="text-[9px] font-bold px-1 py-0.5 rounded shrink-0" style={{ backgroundColor: 'rgba(255,71,87,0.15)', color: '#ff4757' }}>
-                PROV
-              </span>
-            )}
-            {!provisional && vet === 2 && (
+            {vet === 2 && (
               <span className="text-[9px] font-bold px-1 py-0.5 rounded shrink-0" style={{ backgroundColor: 'rgba(204,128,255,0.15)', color: '#cc80ff' }}>
                 S·VET
               </span>
             )}
-            {!provisional && vet === 1 && (
+            {vet === 1 && (
               <span className="text-[9px] font-bold px-1 py-0.5 rounded shrink-0" style={{ backgroundColor: 'rgba(245,197,24,0.15)', color: '#F5C518' }}>
                 VET
+              </span>
+            )}
+            {provisional && (
+              <span className="text-[9px] font-bold px-1 py-0.5 rounded shrink-0" style={{ backgroundColor: 'rgba(255,71,87,0.15)', color: '#ff4757' }}>
+                PROV
               </span>
             )}
           </div>
@@ -386,29 +386,31 @@ export default function Rankings({ players, settings, sessions }: RankingsProps)
         </div>
 
         {/* Status */}
-        <div className="flex justify-center">
-          {provisional ? (
-            <span
-              className="text-[10px] font-bold px-2 py-0.5 rounded"
-              style={{ backgroundColor: 'rgba(255,71,87,0.15)', color: '#ff4757' }}
-            >
-              PROV
-            </span>
-          ) : vet === 2 ? (
+        <div className="flex justify-center gap-1">
+          {vet === 2 && (
             <span
               className="text-[10px] font-bold px-2 py-0.5 rounded"
               style={{ backgroundColor: 'rgba(204,128,255,0.15)', color: '#cc80ff' }}
             >
               S·VET
             </span>
-          ) : vet === 1 ? (
+          )}
+          {vet === 1 && (
             <span
               className="text-[10px] font-bold px-2 py-0.5 rounded"
               style={{ backgroundColor: 'rgba(245,197,24,0.15)', color: '#F5C518' }}
             >
               VET
             </span>
-          ) : null}
+          )}
+          {provisional && (
+            <span
+              className="text-[10px] font-bold px-2 py-0.5 rounded"
+              style={{ backgroundColor: 'rgba(255,71,87,0.15)', color: '#ff4757' }}
+            >
+              PROV
+            </span>
+          )}
         </div>
       </div>
     );
