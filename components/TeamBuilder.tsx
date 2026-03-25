@@ -59,10 +59,11 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
     [players, search]
   );
 
-  const minPlayers = teamCount * 5;
-  const maxPlayers = teamCount * 6;
-  const selectionValid =
-    selected.size >= minPlayers && selected.size <= maxPlayers;
+  const recommendedMin = teamCount * 5;
+  const recommendedMax = teamCount * 6;
+  const selectionInRange =
+    selected.size >= recommendedMin && selected.size <= recommendedMax;
+  const canBalance = selected.size >= teamCount;
 
   const togglePlayer = (id: number) => {
     setSelected((prev) => {
@@ -76,7 +77,7 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
   };
 
   const handleBalance = () => {
-    if (!selectionValid) return;
+    if (!canBalance) return;
     const selectedPlayers = players.filter((p) => selected.has(p.id));
     const result = balanceNTeams(selectedPlayers, teamCount, settings);
     setTeams(result);
@@ -88,7 +89,7 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
   };
 
   const handleRegenerate = () => {
-    if (!selectionValid) return;
+    if (!canBalance) return;
     const selectedPlayers = players.filter((p) => selected.has(p.id));
     const result = balanceNTeams(selectedPlayers, teamCount, settings);
     setTeams(result);
@@ -355,11 +356,11 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
         <div className="flex items-center justify-between">
           <span
             className="text-sm font-semibold"
-            style={{ color: selectionValid ? '#c8d8ec' : '#ff4757' }}
+            style={{ color: canBalance ? '#c8d8ec' : '#ff4757' }}
           >
             {selected.size} selected{' '}
-            <span className="font-normal" style={{ color: '#3d5270' }}>
-              (need {minPlayers}–{maxPlayers})
+            <span className="font-normal" style={{ color: selectionInRange ? '#3d5270' : '#F5C518' }}>
+              (recommended {recommendedMin}–{recommendedMax})
             </span>
           </span>
         </div>
@@ -439,12 +440,12 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
       {!matchMode && (
         <button
           onClick={handleBalance}
-          disabled={!selectionValid}
+          disabled={!canBalance}
           className="w-full py-3 rounded-lg text-sm font-bold transition-all"
           style={{
-            backgroundColor: selectionValid ? '#F5C518' : '#1e2e48',
-            color: selectionValid ? '#070a13' : '#3d5270',
-            cursor: selectionValid ? 'pointer' : 'not-allowed',
+            backgroundColor: canBalance ? '#F5C518' : '#1e2e48',
+            color: canBalance ? '#070a13' : '#3d5270',
+            cursor: canBalance ? 'pointer' : 'not-allowed',
           }}
         >
           Balance {teamCount} Teams
