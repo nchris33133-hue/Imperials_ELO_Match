@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Player, Settings, Session } from '@/lib/types';
-import { getTier, isProvisional, vetLevel } from '@/lib/elo';
+import { getTier, isProvisional, vetLevel, getStability } from '@/lib/elo';
 
 interface RankingsProps {
   players: Player[];
@@ -136,8 +136,8 @@ export default function Rankings({ players, settings, sessions }: RankingsProps)
   function renderMobileRow(player: Player, rank: number) {
     const tier = getTier(player.elo);
     const tierColor = TIER_COLORS[tier.label] || '#3d5270';
-    const provisional = isProvisional(player, settings);
     const vet = vetLevel(player);
+    const stab = getStability(player, settings);
     const delta = player.lastDelta;
     const chg = getChgData(player, rank);
 
@@ -179,9 +179,19 @@ export default function Rankings({ players, settings, sessions }: RankingsProps)
                 VET
               </span>
             )}
-            {provisional && (
+            {stab === 'PROV' && (
               <span className="text-[9px] font-bold px-1 py-0.5 rounded shrink-0" style={{ backgroundColor: 'rgba(255,71,87,0.15)', color: '#ff4757' }}>
                 PROV
+              </span>
+            )}
+            {stab === 'STABLE' && (
+              <span className="text-[9px] font-bold px-1 py-0.5 rounded shrink-0" style={{ backgroundColor: 'rgba(0,206,201,0.15)', color: '#00cec9' }}>
+                STABLE
+              </span>
+            )}
+            {stab === 'S·STABLE' && (
+              <span className="text-[9px] font-bold px-1 py-0.5 rounded shrink-0" style={{ backgroundColor: 'rgba(0,184,148,0.15)', color: '#00b894' }}>
+                S·STABLE
               </span>
             )}
           </div>
@@ -245,8 +255,8 @@ export default function Rankings({ players, settings, sessions }: RankingsProps)
   function renderRow(player: Player, rank: number) {
     const tier = getTier(player.elo);
     const tierColor = TIER_COLORS[tier.label] || '#3d5270';
-    const provisional = isProvisional(player, settings);
     const vet = vetLevel(player);
+    const stab = getStability(player, settings);
     const delta = player.lastDelta;
 
     return (
@@ -403,12 +413,28 @@ export default function Rankings({ players, settings, sessions }: RankingsProps)
               VET
             </span>
           )}
-          {provisional && (
+          {stab === 'PROV' && (
             <span
               className="text-[10px] font-bold px-2 py-0.5 rounded"
               style={{ backgroundColor: 'rgba(255,71,87,0.15)', color: '#ff4757' }}
             >
               PROV
+            </span>
+          )}
+          {stab === 'STABLE' && (
+            <span
+              className="text-[10px] font-bold px-2 py-0.5 rounded"
+              style={{ backgroundColor: 'rgba(0,206,201,0.15)', color: '#00cec9' }}
+            >
+              STABLE
+            </span>
+          )}
+          {stab === 'S·STABLE' && (
+            <span
+              className="text-[10px] font-bold px-2 py-0.5 rounded"
+              style={{ backgroundColor: 'rgba(0,184,148,0.15)', color: '#00b894' }}
+            >
+              S·STABLE
             </span>
           )}
         </div>
@@ -586,18 +612,7 @@ export default function Rankings({ players, settings, sessions }: RankingsProps)
 
           <div className="w-px h-4 self-center" style={{ backgroundColor: '#1e2e48' }} />
 
-          {/* Status Tags */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <span
-              className="text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded"
-              style={{ backgroundColor: 'rgba(255,71,87,0.15)', color: '#ff4757' }}
-            >
-              PROV
-            </span>
-            <span className="text-[10px] sm:text-xs" style={{ color: '#3d5270' }}>
-              Provisional
-            </span>
-          </div>
+          {/* Veteran Tags */}
           <div className="flex items-center gap-1.5 sm:gap-2">
             <span
               className="text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded"
@@ -618,6 +633,43 @@ export default function Rankings({ players, settings, sessions }: RankingsProps)
             </span>
             <span className="text-[10px] sm:text-xs" style={{ color: '#3d5270' }}>
               Super Veteran
+            </span>
+          </div>
+
+          <div className="w-px h-4 self-center" style={{ backgroundColor: '#1e2e48' }} />
+
+          {/* Stability Tags */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <span
+              className="text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded"
+              style={{ backgroundColor: 'rgba(255,71,87,0.15)', color: '#ff4757' }}
+            >
+              PROV
+            </span>
+            <span className="text-[10px] sm:text-xs" style={{ color: '#3d5270' }}>
+              Provisional (K=40)
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <span
+              className="text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded"
+              style={{ backgroundColor: 'rgba(0,206,201,0.15)', color: '#00cec9' }}
+            >
+              STABLE
+            </span>
+            <span className="text-[10px] sm:text-xs" style={{ color: '#3d5270' }}>
+              Stable (K=28)
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <span
+              className="text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded"
+              style={{ backgroundColor: 'rgba(0,184,148,0.15)', color: '#00b894' }}
+            >
+              S·STABLE
+            </span>
+            <span className="text-[10px] sm:text-xs" style={{ color: '#3d5270' }}>
+              Super Stable (K=20)
             </span>
           </div>
         </div>

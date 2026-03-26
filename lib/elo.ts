@@ -3,6 +3,29 @@ import { Player, Session, Settings, VetLevel } from './types';
 export const WIN_FACTOR = 1.15;
 export const LOSS_FACTOR = 0.85;
 
+export type Stability = 'PROV' | 'STABLE' | 'S·STABLE';
+
+/** Get the stability stage for a player based on games played vs provisional thresholds. */
+export function getStability(p: Player, settings: Settings): Stability {
+  const vl = vetLevel(p);
+  const provThreshold =
+    vl === 2 ? settings.superVetProvGames :
+    vl === 1 ? settings.vetProvGames :
+    settings.provGames;
+  if (p.games < provThreshold) return 'PROV';
+  if (p.games < provThreshold * 2) return 'STABLE';
+  return 'S·STABLE';
+}
+
+/** K-factor based on stability: PROV=40, STABLE=28, S·STABLE=20 */
+export function kForPlayer(p: Player, settings: Settings): number {
+  const stab = getStability(p, settings);
+  if (stab === 'PROV') return 40;
+  if (stab === 'STABLE') return 28;
+  return 20;
+}
+
+/** @deprecated Use kForPlayer instead — kept for compatibility */
 export function kForGames(games: number): number {
   if (games < 10) return 40;
   if (games < 20) return 32;
@@ -17,12 +40,7 @@ export function vetLevel(p: Player): VetLevel {
 }
 
 export function isProvisional(p: Player, settings: Settings): boolean {
-  const vl = vetLevel(p);
-  const threshold =
-    vl === 2 ? settings.superVetProvGames :
-    vl === 1 ? settings.vetProvGames :
-    settings.provGames;
-  return p.games < threshold;
+  return getStability(p, settings) === 'PROV';
 }
 
 export function getTier(elo: number) {
@@ -105,7 +123,7 @@ export function applyMatchResults(
 
       // Update team I players
       for (const p of teams[i]) {
-        const k = kForGames(p.games);
+        const k = kForPlayer(p, settings);
         const diff = scoreI - eI;
         const factor = diff >= 0 ? WIN_FACTOR : LOSS_FACTOR;
         const d = k * diff * factor;
@@ -114,7 +132,7 @@ export function applyMatchResults(
 
       // Update team J players
       for (const p of teams[j]) {
-        const k = kForGames(p.games);
+        const k = kForPlayer(p, settings);
         const diff = scoreJ - eJ;
         const factor = diff >= 0 ? WIN_FACTOR : LOSS_FACTOR;
         const d = k * diff * factor;
@@ -204,9 +222,9 @@ export function defaultSettings(): Settings {
     genderWeight: 50,
     genderBalanceWeight: 120,
     unequalBonus: 30,
-    provGames: 10,
-    vetProvGames: 20,
-    superVetProvGames: 30,
+    provGames: 5,
+    vetProvGames: 10,
+    superVetProvGames: 15,
     vetStartElo: 1100,
     superVetStartElo: 1200,
     baseElo: 1000,
