@@ -258,7 +258,6 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
     const stab = getStability(player, settings);
     if (stab === 'S·STABLE') tags.push({ label: 'S·STABLE', color: '#00b894' });
     else if (stab === 'STABLE') tags.push({ label: 'STABLE', color: '#00cec9' });
-    else tags.push({ label: 'PROV', color: '#f39c12' });
     return tags;
   };
 

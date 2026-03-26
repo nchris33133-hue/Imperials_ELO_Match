@@ -179,11 +179,6 @@ export default function Rankings({ players, settings, sessions }: RankingsProps)
                 VET
               </span>
             )}
-            {stab === 'PROV' && (
-              <span className="text-[9px] font-bold px-1 py-0.5 rounded shrink-0" style={{ backgroundColor: 'rgba(255,71,87,0.15)', color: '#ff4757' }}>
-                PROV
-              </span>
-            )}
             {stab === 'STABLE' && (
               <span className="text-[9px] font-bold px-1 py-0.5 rounded shrink-0" style={{ backgroundColor: 'rgba(0,206,201,0.15)', color: '#00cec9' }}>
                 STABLE
@@ -413,14 +408,6 @@ export default function Rankings({ players, settings, sessions }: RankingsProps)
               VET
             </span>
           )}
-          {stab === 'PROV' && (
-            <span
-              className="text-[10px] font-bold px-2 py-0.5 rounded"
-              style={{ backgroundColor: 'rgba(255,71,87,0.15)', color: '#ff4757' }}
-            >
-              PROV
-            </span>
-          )}
           {stab === 'STABLE' && (
             <span
               className="text-[10px] font-bold px-2 py-0.5 rounded"
@@ -639,17 +626,6 @@ export default function Rankings({ players, settings, sessions }: RankingsProps)
           <div className="w-px h-4 self-center" style={{ backgroundColor: '#1e2e48' }} />
 
           {/* Stability Tags */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <span
-              className="text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded"
-              style={{ backgroundColor: 'rgba(255,71,87,0.15)', color: '#ff4757' }}
-            >
-              PROV
-            </span>
-            <span className="text-[10px] sm:text-xs" style={{ color: '#3d5270' }}>
-              Provisional (K=40)
-            </span>
-          </div>
           <div className="flex items-center gap-1.5 sm:gap-2">
             <span
               className="text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2 py-0.5 rounded"
