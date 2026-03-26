@@ -1,10 +1,24 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { isProvisional, vetLevel, teamEffectiveElo, applyMatchResults, previewMatchDeltas } from '@/lib/elo';
+import { useState, useMemo, useEffect, useRef } from 'react';
+import { isProvisional, vetLevel, getStability, teamEffectiveElo, applyMatchResults, previewMatchDeltas } from '@/lib/elo';
 import { balanceNTeams } from '@/lib/balancer';
 import { generateTeamNames, regenerateTeamNames, type TeamNameResult } from '@/lib/teamNames';
 import type { Player, Session, Settings, TeamChangeEntry } from '@/lib/types';
+
+const GAME_STATE_KEY = 'vi-active-game';
+
+interface SavedGameState {
+  teams: number[][]; // store player IDs, not full objects (rehydrate from props)
+  teamNames: TeamNameResult[];
+  teamCount: number;
+  matchMode: boolean;
+  placements: number[];
+  sessionLabel: string;
+  lms: [string | null, string | null, string | null, string | null];
+  manualChanges: TeamChangeEntry[];
+  selectedIds: number[];
+}
 
 const RANK_LABELS: Record<number, string> = {
   1: '1st',
@@ -50,6 +64,72 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
     toTeamName?: string;
   } | null>(null);
   const [changeReason, setChangeReason] = useState('');
+
+  // Track whether we've restored from localStorage already
+  const restoredRef = useRef(false);
+
+  // --- Persist / restore game state ---
+  const saveGameState = (
+    teamsData: Player[][] | null,
+    namesData: TeamNameResult[],
+    tc: number,
+    mm: boolean,
+    pl: number[],
+    sl: string,
+    lms: [string | null, string | null, string | null, string | null],
+    mc: TeamChangeEntry[],
+    sel: Set<number>,
+  ) => {
+    if (!teamsData || !mm) {
+      try { localStorage.removeItem(GAME_STATE_KEY); } catch {}
+      return;
+    }
+    const saved: SavedGameState = {
+      teams: teamsData.map(t => t.map(p => p.id)),
+      teamNames: namesData,
+      teamCount: tc,
+      matchMode: mm,
+      placements: pl,
+      sessionLabel: sl,
+      lms,
+      manualChanges: mc,
+      selectedIds: Array.from(sel),
+    };
+    try { localStorage.setItem(GAME_STATE_KEY, JSON.stringify(saved)); } catch {}
+  };
+
+  // Restore saved game on mount
+  useEffect(() => {
+    if (restoredRef.current) return;
+    restoredRef.current = true;
+    try {
+      const raw = localStorage.getItem(GAME_STATE_KEY);
+      if (!raw) return;
+      const saved: SavedGameState = JSON.parse(raw);
+      if (!saved.matchMode || !saved.teams?.length) return;
+      const playerMap = new Map(players.map(p => [p.id, p]));
+      const rehydrated: Player[][] = saved.teams
+        .map(ids => ids.map(id => playerMap.get(id)).filter((p): p is Player => !!p));
+      // Only restore if we got valid teams
+      if (rehydrated.some(t => t.length === 0)) return;
+      setTeams(rehydrated);
+      setTeamNames(saved.teamNames || []);
+      setTeamCount(saved.teamCount);
+      setMatchMode(true);
+      setPlacements(saved.placements || new Array(saved.teamCount).fill(0));
+      setSessionLabel(saved.sessionLabel || '');
+      setLmsMale1st(saved.lms?.[0] ?? null);
+      setLmsMale2nd(saved.lms?.[1] ?? null);
+      setLmsFemale1st(saved.lms?.[2] ?? null);
+      setLmsFemale2nd(saved.lms?.[3] ?? null);
+      setManualChanges(saved.manualChanges || []);
+      setSelected(new Set(saved.selectedIds || []));
+    } catch {}
+  }, [players]);
+
+  const clearGameState = () => {
+    try { localStorage.removeItem(GAME_STATE_KEY); } catch {}
+  };
 
   const filteredPlayers = useMemo(
     () =>
@@ -101,12 +181,15 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
 
   const handleStartMatch = () => {
     setMatchMode(true);
-    setPlacements(new Array(teamCount).fill(0));
+    const newPlacements = new Array(teamCount).fill(0);
+    setPlacements(newPlacements);
     setShowConfirm(false);
     setLmsMale1st(null);
     setLmsMale2nd(null);
     setLmsFemale1st(null);
     setLmsFemale2nd(null);
+    // Persist game state
+    saveGameState(teams, teamNames, teamCount, true, newPlacements, sessionLabel, [null, null, null, null], manualChanges, selected);
   };
 
   const handleCancelMatch = () => {
@@ -117,6 +200,7 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
     setLmsMale2nd(null);
     setLmsFemale1st(null);
     setLmsFemale2nd(null);
+    clearGameState();
   };
 
   const setPlacement = (teamIndex: number, rank: number) => {
@@ -162,16 +246,19 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
     setPlacements([]);
     setShowConfirm(false);
     setManualChanges([]);
+    clearGameState();
   };
 
   const getStatusTags = (player: Player) => {
     const tags: { label: string; color: string }[] = [];
-    if (isProvisional(player, settings)) {
-      tags.push({ label: 'PROV', color: '#f39c12' });
-    }
     const vl = vetLevel(player);
     if (vl === 2) tags.push({ label: 'S·VET', color: '#cc80ff' });
     else if (vl === 1) tags.push({ label: 'VET', color: '#2ecc71' });
+    // Stability tag based on games played
+    const stab = getStability(player, settings);
+    if (stab === 'S·STABLE') tags.push({ label: 'S·STABLE', color: '#00b894' });
+    else if (stab === 'STABLE') tags.push({ label: 'STABLE', color: '#00cec9' });
+    else tags.push({ label: 'PROV', color: '#f39c12' });
     return tags;
   };
 
@@ -278,6 +365,74 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
   const cancelPendingChange = () => {
     setPendingChange(null);
     setChangeReason('');
+  };
+
+  // --- Match-mode add/remove with auto-rebalance ---
+  const handleMatchAddPlayer = (playerId: number) => {
+    if (!teams) return;
+    const player = players.find(p => p.id === playerId);
+    if (!player) return;
+    const allPlayers = [...teams.flat(), player];
+    const rebalanced = balanceNTeams(allPlayers, teamCount, settings);
+    setTeams(rebalanced);
+    const newPlacements = new Array(teamCount).fill(0);
+    setPlacements(newPlacements);
+    setShowConfirm(false);
+    // Reset LMS if selected player names are no longer in teams
+    const allNames = new Set(rebalanced.flat().map(p => p.name));
+    if (lmsMale1st && !allNames.has(lmsMale1st)) setLmsMale1st(null);
+    if (lmsMale2nd && !allNames.has(lmsMale2nd)) setLmsMale2nd(null);
+    if (lmsFemale1st && !allNames.has(lmsFemale1st)) setLmsFemale1st(null);
+    if (lmsFemale2nd && !allNames.has(lmsFemale2nd)) setLmsFemale2nd(null);
+    const entry: TeamChangeEntry = {
+      type: 'add',
+      player: player.name,
+      to: 'Auto-rebalanced',
+      reason: 'Late arrival — teams auto-rebalanced',
+      timestamp: new Date().toISOString(),
+    };
+    const newChanges = [...manualChanges, entry];
+    setManualChanges(newChanges);
+    // Update selected set & persist
+    const newSelected = new Set(selected);
+    newSelected.add(playerId);
+    setSelected(newSelected);
+    saveGameState(rebalanced, teamNames, teamCount, true, newPlacements, sessionLabel,
+      [lmsMale1st, lmsMale2nd, lmsFemale1st, lmsFemale2nd], newChanges, newSelected);
+  };
+
+  const handleMatchRemovePlayer = (playerId: number) => {
+    if (!teams) return;
+    const player = teams.flat().find(p => p.id === playerId);
+    if (!player) return;
+    const remaining = teams.flat().filter(p => p.id !== playerId);
+    if (remaining.length < teamCount) return; // can't have fewer players than teams
+    const rebalanced = balanceNTeams(remaining, teamCount, settings);
+    setTeams(rebalanced);
+    const newPlacements = new Array(teamCount).fill(0);
+    setPlacements(newPlacements);
+    setShowConfirm(false);
+    // Reset LMS if removed player was selected
+    if (lmsMale1st === player.name) setLmsMale1st(null);
+    if (lmsMale2nd === player.name) setLmsMale2nd(null);
+    if (lmsFemale1st === player.name) setLmsFemale1st(null);
+    if (lmsFemale2nd === player.name) setLmsFemale2nd(null);
+    const teamName = teamNames[teams.findIndex(t => t.some(p => p.id === playerId))]?.name || 'team';
+    const entry: TeamChangeEntry = {
+      type: 'remove',
+      player: player.name,
+      from: teamName,
+      reason: 'Player removed — teams auto-rebalanced',
+      timestamp: new Date().toISOString(),
+    };
+    const newChanges = [...manualChanges, entry];
+    setManualChanges(newChanges);
+    // Update selected set & persist
+    const newSelected = new Set(selected);
+    newSelected.delete(playerId);
+    setSelected(newSelected);
+    saveGameState(rebalanced, teamNames, teamCount, true, newPlacements, sessionLabel,
+      [lmsMale1st, lmsMale2nd, lmsFemale1st, lmsFemale2nd], newChanges, newSelected);
   };
 
   // Compute summary data when teams exist
@@ -771,6 +926,20 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
                                 {delta > 0 ? '+' : ''}{delta}
                               </span>
                             )}
+                            {matchMode && (
+                              <button
+                                onClick={() => handleMatchRemovePlayer(p.id)}
+                                className="text-[10px] font-bold rounded px-1.5 py-0.5 transition-opacity hover:opacity-80"
+                                style={{
+                                  backgroundColor: 'rgba(255,71,87,0.15)',
+                                  color: '#ff4757',
+                                  border: '1px solid rgba(255,71,87,0.3)',
+                                }}
+                                title="Remove & rebalance"
+                              >
+                                ✕
+                              </button>
+                            )}
                             {!matchMode && teams && teams.length > 1 && (
                               <>
                                 <select
@@ -816,7 +985,7 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
                       );
                     })}
 
-                    {/* Add player to team */}
+                    {/* Add player to team (pre-match manual) */}
                     {!matchMode && availablePlayers.length > 0 && (
                       <div className="px-4 py-2" style={{ borderTop: '1px solid #1e2e48' }}>
                         <select
@@ -848,6 +1017,51 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
               );
             })}
           </div>
+
+          {/* Match-mode: Add player & rebalance */}
+          {matchMode && availablePlayers.length > 0 && (
+            <div
+              className="rounded-lg px-4 py-3 flex flex-col gap-2"
+              style={{
+                backgroundColor: '#0c1220',
+                border: '1px solid rgba(46,204,113,0.3)',
+              }}
+            >
+              <div className="flex items-center gap-2">
+                <span
+                  className="text-xs font-bold px-2 py-0.5 rounded"
+                  style={{ backgroundColor: 'rgba(46,204,113,0.15)', color: '#2ecc71' }}
+                >
+                  ADD PLAYER
+                </span>
+                <span className="text-[10px]" style={{ color: '#3d5270' }}>
+                  Teams will auto-rebalance
+                </span>
+              </div>
+              <select
+                value=""
+                onChange={(e) => {
+                  const pid = Number(e.target.value);
+                  if (!isNaN(pid)) handleMatchAddPlayer(pid);
+                }}
+                className="w-full text-xs rounded px-2 py-1.5 outline-none"
+                style={{
+                  backgroundColor: '#121b2e',
+                  border: '1px solid #1e2e48',
+                  color: '#c8d8ec',
+                }}
+              >
+                <option value="">+ Select player to add...</option>
+                {availablePlayers
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map(p => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} ({p.gender}, {p.elo})
+                    </option>
+                  ))}
+              </select>
+            </div>
+          )}
 
           {/* Summary row */}
           <div
