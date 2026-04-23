@@ -304,6 +304,7 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
     const vl = vetLevel(player);
     if (vl === 2) tags.push({ label: 'S·VET', color: '#cc80ff' });
     else if (vl === 1) tags.push({ label: 'VET', color: '#2ecc71' });
+    else if (vl === 3) tags.push({ label: 'NEWB', color: '#ff9f43' });
     // Stability tag based on games played
     const stab = getStability(player, settings);
     if (stab === 'S·STABLE') tags.push({ label: 'S·STABLE', color: '#00b894' });

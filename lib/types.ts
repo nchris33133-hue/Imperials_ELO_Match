@@ -1,5 +1,6 @@
 export type Gender = 'M' | 'F';
-export type VetLevel = 0 | 1 | 2;
+/** 0 = Regular, 1 = Veteran, 2 = Super Veteran, 3 = Newb (low starting ELO) */
+export type VetLevel = 0 | 1 | 2 | 3;
 
 export interface Player {
   id: number;
@@ -65,6 +66,7 @@ export interface Settings {
   superVetProvGames: number;
   vetStartElo: number;
   superVetStartElo: number;
+  newbStartElo: number;
   baseElo: number;
 }
 
@@ -72,6 +74,8 @@ export interface AppState {
   players: Player[];
   nextId: number;
   nextBuddyGroupId: number;
+  /** True once historical LMS has been rolled into pts. */
+  ptsIncludeLms?: boolean;
   settings: Settings;
   sessions: Session[];
 }

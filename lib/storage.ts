@@ -73,12 +73,19 @@ function migrateSettings(loadedSettings: any): any {
 function buildState(loaded: any, seedPlayers: Player[]): AppState {
   let players = migratePlayers(loaded, seedPlayers);
   players = applySeedMerge(players, seedPlayers);
+  // One-time: roll historical LMS bonus into accumulated pts so "total points" includes BP
+  let ptsIncludeLms = loaded.ptsIncludeLms === true;
+  if (!ptsIncludeLms) {
+    players = players.map(p => ({ ...p, pts: p.pts + (p.lms ?? 0) }));
+    ptsIncludeLms = true;
+  }
   // Derive nextBuddyGroupId: max existing group + 1 (or 1 if none)
   const maxGroup = players.reduce((m: number, p: Player) => (p.buddyGroup ?? 0) > m ? p.buddyGroup! : m, 0);
   return {
     players,
     nextId: loaded.nextId ?? seedPlayers.length + 1,
     nextBuddyGroupId: loaded.nextBuddyGroupId ?? maxGroup + 1,
+    ptsIncludeLms,
     settings: { ...defaultSettings(), ...migrateSettings(loaded.settings) },
     sessions: loaded.sessions ?? [],
   };
@@ -89,6 +96,7 @@ function defaultState(seedPlayers: Player[]): AppState {
     players: seedPlayers,
     nextId: seedPlayers.length + 1,
     nextBuddyGroupId: 1,
+    ptsIncludeLms: true,
     settings: defaultSettings(),
     sessions: [],
   };

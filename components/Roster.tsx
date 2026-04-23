@@ -22,20 +22,22 @@ export default function Roster({
 }: RosterProps) {
   const [name, setName] = useState('');
   const [gender, setGender] = useState<'M' | 'F'>('M');
-  const [vetLevel, setVetLevel] = useState<0 | 1 | 2>(0);
+  const [vetLevel, setVetLevel] = useState<0 | 1 | 2 | 3>(0);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState('');
 
-  const eloMap: Record<0 | 1 | 2, number> = {
+  const eloMap: Record<0 | 1 | 2 | 3, number> = {
     0: settings.baseElo,
     1: settings.vetStartElo,
     2: settings.superVetStartElo,
+    3: settings.newbStartElo,
   };
 
-  const vetLabelMap: Record<0 | 1 | 2, string> = {
+  const vetLabelMap: Record<0 | 1 | 2 | 3, string> = {
     0: 'Regular',
     1: 'Veteran',
     2: 'Super Veteran',
+    3: 'Newb',
   };
 
   const handleAdd = () => {
@@ -96,7 +98,7 @@ export default function Roster({
     );
   };
 
-  const handleVeteranChange = (id: number, newLevel: 0 | 1 | 2) => {
+  const handleVeteranChange = (id: number, newLevel: 0 | 1 | 2 | 3) => {
     onUpdatePlayers(
       players.map((p) => {
         if (p.id !== id) return p;
@@ -178,7 +180,7 @@ export default function Roster({
             </label>
             <select
               value={vetLevel}
-              onChange={(e) => setVetLevel(Number(e.target.value) as 0 | 1 | 2)}
+              onChange={(e) => setVetLevel(Number(e.target.value) as 0 | 1 | 2 | 3)}
               className="w-full rounded px-3 py-2 text-sm outline-none focus:ring-1"
               style={{
                 backgroundColor: '#121b2e',
@@ -186,6 +188,7 @@ export default function Roster({
                 color: '#c8d8ec',
               }}
             >
+              <option value={3}>Newb</option>
               <option value={0}>Regular</option>
               <option value={1}>Veteran</option>
               <option value={2}>Super Veteran</option>
@@ -300,7 +303,7 @@ export default function Roster({
                       onChange={(e) =>
                         handleVeteranChange(
                           player.id,
-                          Number(e.target.value) as 0 | 1 | 2
+                          Number(e.target.value) as 0 | 1 | 2 | 3
                         )
                       }
                       className="rounded px-2 py-1 text-sm outline-none"
@@ -310,6 +313,7 @@ export default function Roster({
                         color: '#c8d8ec',
                       }}
                     >
+                      <option value={3}>Newb</option>
                       <option value={0}>Regular</option>
                       <option value={1}>Veteran</option>
                       <option value={2}>Super Veteran</option>
@@ -426,10 +430,11 @@ export default function Roster({
               </select>
               <select
                 value={player.veteran}
-                onChange={(e) => handleVeteranChange(player.id, Number(e.target.value) as 0 | 1 | 2)}
+                onChange={(e) => handleVeteranChange(player.id, Number(e.target.value) as 0 | 1 | 2 | 3)}
                 className="rounded px-2 py-1 text-xs outline-none flex-1"
                 style={{ backgroundColor: '#121b2e', border: '1px solid #1e2e48', color: '#c8d8ec' }}
               >
+                <option value={3}>Newb</option>
                 <option value={0}>Regular</option>
                 <option value={1}>Veteran</option>
                 <option value={2}>Super Veteran</option>

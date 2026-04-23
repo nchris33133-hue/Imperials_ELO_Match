@@ -87,6 +87,13 @@ const SECTIONS: { title: string; settings: SettingDef[] }[] = [
     title: 'Starting ELO',
     settings: [
       {
+        key: 'newbStartElo',
+        label: 'Newb Start ELO',
+        description: 'Starting ELO for players marked as newbs — lower than base so rookies can climb quickly.',
+        min: 600,
+        max: 1100,
+      },
+      {
         key: 'baseElo',
         label: 'Base ELO',
         description: 'The default starting ELO rating assigned to new players.',

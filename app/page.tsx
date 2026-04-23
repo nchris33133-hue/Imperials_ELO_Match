@@ -211,6 +211,7 @@ export default function Home() {
       players: seedPlayers,
       nextId: seedPlayers.length + 1,
       nextBuddyGroupId: 1,
+      ptsIncludeLms: true,
       settings: defaultSettings(),
       sessions: [],
     };

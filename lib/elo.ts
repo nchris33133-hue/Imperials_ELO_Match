@@ -34,6 +34,7 @@ export function kForGames(games: number): number {
 }
 
 export function vetLevel(p: Player): VetLevel {
+  if (p.veteran === 3) return 3;
   if (p.veteran === 2) return 2;
   if ((p.veteran as any) === true || p.veteran === 1) return 1;
   return 0;
@@ -168,7 +169,8 @@ export function applyMatchResults(
       if (lmsFinishers[0] === p.name || lmsFinishers[2] === p.name) lmsBonus = LMS_POINTS[0];
       else if (lmsFinishers[1] === p.name || lmsFinishers[3] === p.name) lmsBonus = LMS_POINTS[1];
 
-      const sessionGain = placePts;
+      // Total points accrued this session = placement + LMS bonus
+      const sessionGain = placePts + lmsBonus;
       pointGains[p.name] = sessionGain;
 
       updatedPlayers.push({
@@ -177,7 +179,7 @@ export function applyMatchResults(
         games: p.games + 1,
         placements: newPlacements,
         lastDelta: roundedDelta,
-        pts: p.pts + placePts,
+        pts: p.pts + sessionGain,
         lastGain: sessionGain,
         lms: p.lms + lmsBonus,
         prevRank: p.prevRank, // preserved; overwritten in handleRecordMatch
@@ -229,6 +231,7 @@ export function defaultSettings(): Settings {
     superVetProvGames: 15,
     vetStartElo: 1100,
     superVetStartElo: 1200,
+    newbStartElo: 900,
     baseElo: 1000,
   };
 }
