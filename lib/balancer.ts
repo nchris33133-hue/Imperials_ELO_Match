@@ -21,7 +21,7 @@ export function balanceNTeams(players: Player[], n: number, settings: Settings):
     } else {
       // Find team with room that has lowest ELO
       const open = teams
-        .map((t, idx) => ({ idx, room: teamSizes[idx] - t.length, elo: teamEffectiveElo(t, false, settings) }))
+        .map((t, idx) => ({ idx, room: teamSizes[idx] - t.length, elo: teamEffectiveElo(t, teamSizes, settings) }))
         .filter(x => x.room > 0)
         .sort((a, b) => a.elo - b.elo);
       if (open.length) teams[open[0].idx].push(men[i]);
@@ -65,18 +65,21 @@ export function balanceNTeams(players: Player[], n: number, settings: Settings):
   displaced.sort((a, b) => b.elo - a.elo);
   for (const m of displaced) {
     const open = teams
-      .map((t, i) => ({ i, room: teamSizes[i] - t.length, elo: teamEffectiveElo(t, false, settings) }))
+      .map((t, i) => ({ i, room: teamSizes[i] - t.length, elo: teamEffectiveElo(t, teamSizes, settings) }))
       .filter(x => x.room > 0)
       .sort((a, b) => a.elo - b.elo);
     if (!open.length) break;
     teams[open[0].i].push(m);
   }
 
+  // --- Unify buddy groups: move split group members together where possible ---
+  unifyBuddies(teams);
+
   const cost = (ts: Player[][]): number => {
     let elo = 0;
     for (let i = 0; i < ts.length; i++)
       for (let j = i + 1; j < ts.length; j++)
-        elo += Math.abs(teamEffectiveElo(ts[i], false, settings) - teamEffectiveElo(ts[j], false, settings));
+        elo += Math.abs(teamEffectiveElo(ts[i], teamSizes, settings) - teamEffectiveElo(ts[j], teamSizes, settings));
     const counts = ts.map(t => t.filter(p => p.gender === 'F').length);
     const spread = Math.max(...counts) - Math.min(...counts);
     return elo + settings.genderBalanceWeight * spread * spread;
@@ -89,7 +92,10 @@ export function balanceNTeams(players: Player[], n: number, settings: Settings):
       for (let tj = ti + 1; tj < n; tj++) {
         const cur = cost(teams);
         for (let pi = 0; pi < teams[ti].length; pi++) {
+          // Don't break up buddy groups during swap-optimization
+          if (teams[ti][pi].buddyGroup != null) continue;
           for (let pj = 0; pj < teams[tj].length; pj++) {
+            if (teams[tj][pj].buddyGroup != null) continue;
             const nTi = [...teams[ti].slice(0, pi), teams[tj][pj], ...teams[ti].slice(pi + 1)];
             const nTj = [...teams[tj].slice(0, pj), teams[ti][pi], ...teams[tj].slice(pj + 1)];
             const test = teams.map((t, k) => k === ti ? nTi : k === tj ? nTj : t);
@@ -103,4 +109,48 @@ export function balanceNTeams(players: Player[], n: number, settings: Settings):
     }
   }
   return teams;
+}
+
+/**
+ * Move split buddy-group members together via swaps with same-gender non-buddied
+ * partners. Each group ends up on the team where the plurality of its members
+ * already sit. Best-effort — leaves a group split if no valid swap partner exists.
+ */
+function unifyBuddies(teams: Player[][]): void {
+  // groupId -> teamIdx -> members on that team
+  const byGroup = new Map<number, Map<number, Player[]>>();
+  teams.forEach((team, ti) => {
+    for (const p of team) {
+      if (p.buddyGroup == null) continue;
+      let m = byGroup.get(p.buddyGroup);
+      if (!m) { m = new Map(); byGroup.set(p.buddyGroup, m); }
+      const list = m.get(ti) ?? [];
+      list.push(p);
+      m.set(ti, list);
+    }
+  });
+
+  for (const [, teamMap] of byGroup) {
+    if (teamMap.size <= 1) continue; // already unified
+    // Target = team already holding the most group members
+    const entries = [...teamMap.entries()].sort((a, b) => b[1].length - a[1].length);
+    const targetTi = entries[0][0];
+    for (let e = 1; e < entries.length; e++) {
+      const [sourceTi, members] = entries[e];
+      for (const member of members) {
+        const candidates = teams[targetTi]
+          .filter(p => p.buddyGroup == null)
+          .sort((a, b) => {
+            const sameGenderA = a.gender === member.gender ? 0 : 1;
+            const sameGenderB = b.gender === member.gender ? 0 : 1;
+            if (sameGenderA !== sameGenderB) return sameGenderA - sameGenderB;
+            return Math.abs(a.elo - member.elo) - Math.abs(b.elo - member.elo);
+          });
+        if (candidates.length === 0) continue; // leave split
+        const partner = candidates[0];
+        teams[sourceTi] = teams[sourceTi].filter(p => p.id !== member.id).concat(partner);
+        teams[targetTi] = teams[targetTi].filter(p => p.id !== partner.id).concat(member);
+      }
+    }
+  }
 }

@@ -7,6 +7,7 @@ import { generateTeamNames, regenerateTeamNames, type TeamNameResult } from '@/l
 import type { Player, Session, Settings, TeamChangeEntry } from '@/lib/types';
 
 const GAME_STATE_KEY = 'vi-active-game';
+const SELECTION_KEY = 'vi-roster-selection';
 
 interface SavedGameState {
   teams: number[][]; // store player IDs, not full objects (rehydrate from props)
@@ -18,6 +19,11 @@ interface SavedGameState {
   lms: [string | null, string | null, string | null, string | null];
   manualChanges: TeamChangeEntry[];
   selectedIds: number[];
+}
+
+interface SavedSelection {
+  selectedIds: number[];
+  teamCount: number;
 }
 
 const RANK_LABELS: Record<number, string> = {
@@ -52,18 +58,8 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
   const [lmsFemale1st, setLmsFemale1st] = useState<string | null>(null);
   const [lmsFemale2nd, setLmsFemale2nd] = useState<string | null>(null);
 
-  // Audit log for manual team changes
+  // Audit log for auto-rebalance events during match mode (preserved in session for rollback context)
   const [manualChanges, setManualChanges] = useState<TeamChangeEntry[]>([]);
-  const [pendingChange, setPendingChange] = useState<{
-    type: 'move' | 'remove' | 'add';
-    playerId: number;
-    playerName: string;
-    fromTeam?: number;
-    toTeam?: number;
-    fromTeamName?: string;
-    toTeamName?: string;
-  } | null>(null);
-  const [changeReason, setChangeReason] = useState('');
 
   // Track whether we've restored from localStorage already
   const restoredRef = useRef(false);
@@ -98,10 +94,25 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
     try { localStorage.setItem(GAME_STATE_KEY, JSON.stringify(saved)); } catch {}
   };
 
-  // Restore saved game on mount
+  // Restore saved state on mount (selection first, then active game if any)
   useEffect(() => {
     if (restoredRef.current) return;
     restoredRef.current = true;
+
+    const playerIds = new Set(players.map(p => p.id));
+
+    // Restore persistent pre-match selection
+    try {
+      const raw = localStorage.getItem(SELECTION_KEY);
+      if (raw) {
+        const savedSel: SavedSelection = JSON.parse(raw);
+        const validIds = (savedSel.selectedIds || []).filter(id => playerIds.has(id));
+        if (validIds.length) setSelected(new Set(validIds));
+        if (savedSel.teamCount >= 2 && savedSel.teamCount <= 5) setTeamCount(savedSel.teamCount);
+      }
+    } catch {}
+
+    // Then restore active game (overrides selection & teamCount if present)
     try {
       const raw = localStorage.getItem(GAME_STATE_KEY);
       if (!raw) return;
@@ -127,8 +138,21 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
     } catch {}
   }, [players]);
 
+  // Persist selection whenever it changes (only after initial restore)
+  useEffect(() => {
+    if (!restoredRef.current) return;
+    try {
+      const data: SavedSelection = { selectedIds: Array.from(selected), teamCount };
+      localStorage.setItem(SELECTION_KEY, JSON.stringify(data));
+    } catch {}
+  }, [selected, teamCount]);
+
   const clearGameState = () => {
     try { localStorage.removeItem(GAME_STATE_KEY); } catch {}
+  };
+
+  const clearSelection = () => {
+    try { localStorage.removeItem(SELECTION_KEY); } catch {}
   };
 
   const filteredPlayers = useMemo(
@@ -139,6 +163,18 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
     [players, search]
   );
 
+  // groupId -> all members; used to toggle whole groups at once and to badge players
+  const groupMembers = useMemo(() => {
+    const m = new Map<number, Player[]>();
+    for (const p of players) {
+      if (p.buddyGroup == null) continue;
+      const list = m.get(p.buddyGroup) ?? [];
+      list.push(p);
+      m.set(p.buddyGroup, list);
+    }
+    return m;
+  }, [players]);
+
   const recommendedMin = teamCount * 5;
   const recommendedMax = teamCount * 6;
   const selectionInRange =
@@ -148,8 +184,15 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
   const togglePlayer = (id: number) => {
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      const player = players.find(p => p.id === id);
+      const groupIds = player?.buddyGroup != null
+        ? (groupMembers.get(player.buddyGroup) ?? []).map(p => p.id)
+        : [id];
+      if (next.has(id)) {
+        for (const gid of groupIds) next.delete(gid);
+      } else {
+        for (const gid of groupIds) next.add(gid);
+      }
       return next;
     });
     setTeams(null);
@@ -247,6 +290,7 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
     setShowConfirm(false);
     setManualChanges([]);
     clearGameState();
+    clearSelection();
   };
 
   const getStatusTags = (player: Player) => {
@@ -268,106 +312,54 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
     return players.filter(p => !inTeam.has(p.id));
   }, [teams, players]);
 
-  // Request a manual change — opens the justification modal
-  const requestMovePlayer = (playerId: number, fromTeam: number, toTeam: number) => {
+  // --- Pre-match surgical edits (instant, no rebalance, no audit entry) ---
+  const movePlayer = (playerId: number, fromTeam: number, toTeam: number) => {
     if (!teams || fromTeam === toTeam) return;
-    const player = teams[fromTeam].find(p => p.id === playerId);
-    if (!player) return;
-    setPendingChange({
-      type: 'move',
-      playerId,
-      playerName: player.name,
-      fromTeam,
-      toTeam,
-      fromTeamName: teamNames[fromTeam]?.name || `Team ${fromTeam + 1}`,
-      toTeamName: teamNames[toTeam]?.name || `Team ${toTeam + 1}`,
+    setTeams(prev => {
+      if (!prev) return prev;
+      const player = prev[fromTeam].find(p => p.id === playerId);
+      if (!player) return prev;
+      const next = prev.map(t => [...t]);
+      next[fromTeam] = next[fromTeam].filter(p => p.id !== playerId);
+      next[toTeam] = [...next[toTeam], player];
+      return next;
     });
-    setChangeReason('');
   };
 
-  const requestRemoveFromTeam = (playerId: number, teamIndex: number) => {
+  const removeFromTeam = (playerId: number, teamIndex: number) => {
     if (!teams) return;
-    const player = teams[teamIndex].find(p => p.id === playerId);
-    if (!player) return;
-    setPendingChange({
-      type: 'remove',
-      playerId,
-      playerName: player.name,
-      fromTeam: teamIndex,
-      fromTeamName: teamNames[teamIndex]?.name || `Team ${teamIndex + 1}`,
+    setTeams(prev => {
+      if (!prev) return prev;
+      const next = prev.map(t => [...t]);
+      next[teamIndex] = next[teamIndex].filter(p => p.id !== playerId);
+      return next;
     });
-    setChangeReason('');
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.delete(playerId);
+      return next;
+    });
   };
 
-  const requestAddToTeam = (playerId: number, teamIndex: number) => {
+  const addToTeam = (playerId: number, teamIndex: number) => {
     if (!teams) return;
     const player = players.find(p => p.id === playerId);
     if (!player) return;
-    setPendingChange({
-      type: 'add',
-      playerId,
-      playerName: player.name,
-      toTeam: teamIndex,
-      toTeamName: teamNames[teamIndex]?.name || `Team ${teamIndex + 1}`,
+    setTeams(prev => {
+      if (!prev) return prev;
+      const next = prev.map(t => [...t]);
+      next[teamIndex] = [...next[teamIndex], player];
+      return next;
     });
-    setChangeReason('');
+    setSelected(prev => {
+      const next = new Set(prev);
+      next.add(playerId);
+      return next;
+    });
   };
 
-  // Apply the pending change after justification is provided
-  const confirmPendingChange = () => {
-    if (!pendingChange || !changeReason.trim()) return;
-
-    const entry: TeamChangeEntry = {
-      type: pendingChange.type,
-      player: pendingChange.playerName,
-      reason: changeReason.trim(),
-      timestamp: new Date().toISOString(),
-    };
-
-    if (pendingChange.type === 'move') {
-      entry.from = pendingChange.fromTeamName;
-      entry.to = pendingChange.toTeamName;
-      setTeams(prev => {
-        if (!prev) return prev;
-        const player = prev[pendingChange.fromTeam!].find(p => p.id === pendingChange.playerId);
-        if (!player) return prev;
-        const next = prev.map(t => [...t]);
-        next[pendingChange.fromTeam!] = next[pendingChange.fromTeam!].filter(p => p.id !== pendingChange.playerId);
-        next[pendingChange.toTeam!] = [...next[pendingChange.toTeam!], player];
-        return next;
-      });
-    } else if (pendingChange.type === 'remove') {
-      entry.from = pendingChange.fromTeamName;
-      setTeams(prev => {
-        if (!prev) return prev;
-        const next = prev.map(t => [...t]);
-        next[pendingChange.fromTeam!] = next[pendingChange.fromTeam!].filter(p => p.id !== pendingChange.playerId);
-        return next;
-      });
-    } else if (pendingChange.type === 'add') {
-      entry.to = pendingChange.toTeamName;
-      const player = players.find(p => p.id === pendingChange.playerId);
-      if (!player) return;
-      setTeams(prev => {
-        if (!prev) return prev;
-        const next = prev.map(t => [...t]);
-        next[pendingChange.toTeam!] = [...next[pendingChange.toTeam!], player];
-        return next;
-      });
-    }
-
-    setManualChanges(prev => [...prev, entry]);
-    setPendingChange(null);
-    setChangeReason('');
-  };
-
-  const cancelPendingChange = () => {
-    setPendingChange(null);
-    setChangeReason('');
-  };
-
-  // --- Match-mode add/remove with auto-rebalance ---
-  const handleMatchAddPlayer = (playerId: number) => {
+  // --- Global add/subtract + rebalance (works pre-match and in match mode) ---
+  const addAndRebalance = (playerId: number) => {
     if (!teams) return;
     const player = players.find(p => p.id === playerId);
     if (!player) return;
@@ -377,68 +369,73 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
     const newPlacements = new Array(teamCount).fill(0);
     setPlacements(newPlacements);
     setShowConfirm(false);
-    // Reset LMS if selected player names are no longer in teams
+    // Reset LMS selections that reference missing players
     const allNames = new Set(rebalanced.flat().map(p => p.name));
     if (lmsMale1st && !allNames.has(lmsMale1st)) setLmsMale1st(null);
     if (lmsMale2nd && !allNames.has(lmsMale2nd)) setLmsMale2nd(null);
     if (lmsFemale1st && !allNames.has(lmsFemale1st)) setLmsFemale1st(null);
     if (lmsFemale2nd && !allNames.has(lmsFemale2nd)) setLmsFemale2nd(null);
-    const entry: TeamChangeEntry = {
-      type: 'add',
-      player: player.name,
-      to: 'Auto-rebalanced',
-      reason: 'Late arrival — teams auto-rebalanced',
-      timestamp: new Date().toISOString(),
-    };
-    const newChanges = [...manualChanges, entry];
-    setManualChanges(newChanges);
-    // Update selected set & persist
     const newSelected = new Set(selected);
     newSelected.add(playerId);
     setSelected(newSelected);
-    saveGameState(rebalanced, teamNames, teamCount, true, newPlacements, sessionLabel,
-      [lmsMale1st, lmsMale2nd, lmsFemale1st, lmsFemale2nd], newChanges, newSelected);
+    // Match mode: log the rebalance and persist
+    let newChanges = manualChanges;
+    if (matchMode) {
+      const entry: TeamChangeEntry = {
+        type: 'add',
+        player: player.name,
+        to: 'Auto-rebalanced',
+        reason: 'Late arrival — teams auto-rebalanced',
+        timestamp: new Date().toISOString(),
+      };
+      newChanges = [...manualChanges, entry];
+      setManualChanges(newChanges);
+      saveGameState(rebalanced, teamNames, teamCount, true, newPlacements, sessionLabel,
+        [lmsMale1st, lmsMale2nd, lmsFemale1st, lmsFemale2nd], newChanges, newSelected);
+    }
   };
 
-  const handleMatchRemovePlayer = (playerId: number) => {
+  const subtractAndRebalance = (playerId: number) => {
     if (!teams) return;
     const player = teams.flat().find(p => p.id === playerId);
     if (!player) return;
     const remaining = teams.flat().filter(p => p.id !== playerId);
     if (remaining.length < teamCount) return; // can't have fewer players than teams
+    const fromTeamName = teamNames[teams.findIndex(t => t.some(p => p.id === playerId))]?.name || 'team';
     const rebalanced = balanceNTeams(remaining, teamCount, settings);
     setTeams(rebalanced);
     const newPlacements = new Array(teamCount).fill(0);
     setPlacements(newPlacements);
     setShowConfirm(false);
-    // Reset LMS if removed player was selected
     if (lmsMale1st === player.name) setLmsMale1st(null);
     if (lmsMale2nd === player.name) setLmsMale2nd(null);
     if (lmsFemale1st === player.name) setLmsFemale1st(null);
     if (lmsFemale2nd === player.name) setLmsFemale2nd(null);
-    const teamName = teamNames[teams.findIndex(t => t.some(p => p.id === playerId))]?.name || 'team';
-    const entry: TeamChangeEntry = {
-      type: 'remove',
-      player: player.name,
-      from: teamName,
-      reason: 'Player removed — teams auto-rebalanced',
-      timestamp: new Date().toISOString(),
-    };
-    const newChanges = [...manualChanges, entry];
-    setManualChanges(newChanges);
-    // Update selected set & persist
     const newSelected = new Set(selected);
     newSelected.delete(playerId);
     setSelected(newSelected);
-    saveGameState(rebalanced, teamNames, teamCount, true, newPlacements, sessionLabel,
-      [lmsMale1st, lmsMale2nd, lmsFemale1st, lmsFemale2nd], newChanges, newSelected);
+    let newChanges = manualChanges;
+    if (matchMode) {
+      const entry: TeamChangeEntry = {
+        type: 'remove',
+        player: player.name,
+        from: fromTeamName,
+        reason: 'Player removed — teams auto-rebalanced',
+        timestamp: new Date().toISOString(),
+      };
+      newChanges = [...manualChanges, entry];
+      setManualChanges(newChanges);
+      saveGameState(rebalanced, teamNames, teamCount, true, newPlacements, sessionLabel,
+        [lmsMale1st, lmsMale2nd, lmsFemale1st, lmsFemale2nd], newChanges, newSelected);
+    }
   };
 
   // Compute summary data when teams exist
   const summary = useMemo(() => {
     if (!teams) return null;
 
-    const elos = teams.map((t) => teamEffectiveElo(t, false, settings));
+    const teamSizes = teams.map(t => t.length);
+    const elos = teams.map((t) => teamEffectiveElo(t, teamSizes, settings));
     const pairs: { a: number; b: number; gap: number }[] = [];
     for (let i = 0; i < teams.length; i++) {
       for (let j = i + 1; j < teams.length; j++) {
@@ -455,7 +452,24 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
     const minF = Math.min(...fCounts);
     const genderEven = maxF - minF <= 1;
 
-    return { elos, pairs, genders, genderEven };
+    // Detect split buddy groups (selected players whose group spans more than one team)
+    const groupTeams = new Map<number, Set<number>>();
+    teams.forEach((t, ti) => {
+      for (const p of t) {
+        if (p.buddyGroup == null) continue;
+        const set = groupTeams.get(p.buddyGroup) ?? new Set<number>();
+        set.add(ti);
+        groupTeams.set(p.buddyGroup, set);
+      }
+    });
+    const splitGroups: string[] = [];
+    for (const [gid, teamSet] of groupTeams) {
+      if (teamSet.size <= 1) continue;
+      const members = teams.flat().filter(p => p.buddyGroup === gid).map(p => p.name);
+      splitGroups.push(members.join(' & '));
+    }
+
+    return { elos, pairs, genders, genderEven, splitGroups };
   }, [teams, settings]);
 
   return (
@@ -577,6 +591,18 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
                       {tag.label}
                     </span>
                   ))}
+                  {player.buddyGroup != null && (
+                    <span
+                      className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                      style={{
+                        backgroundColor: 'rgba(245,197,24,0.15)',
+                        color: '#F5C518',
+                      }}
+                      title={`Buddy group: ${(groupMembers.get(player.buddyGroup) ?? []).map(p => p.name).join(', ')}`}
+                    >
+                      BUDDY
+                    </span>
+                  )}
                 </div>
                 <span
                   className="text-xs font-mono flex-shrink-0"
@@ -903,10 +929,22 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
                           style={{ borderBottom: '1px solid #1e2e4830' }}
                         >
                           <span
-                            className="text-sm"
+                            className="text-sm flex items-center gap-1.5"
                             style={{ color: '#c8d8ec' }}
                           >
                             {p.name}
+                            {p.buddyGroup != null && (
+                              <span
+                                className="text-[9px] font-bold px-1 py-0.5 rounded"
+                                style={{
+                                  backgroundColor: 'rgba(245,197,24,0.15)',
+                                  color: '#F5C518',
+                                }}
+                                title={`Buddy group: ${(groupMembers.get(p.buddyGroup) ?? []).map(x => x.name).join(', ')}`}
+                              >
+                                B
+                              </span>
+                            )}
                           </span>
                           <div className="flex items-center gap-2">
                             <span
@@ -927,7 +965,7 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
                             )}
                             {matchMode && (
                               <button
-                                onClick={() => handleMatchRemovePlayer(p.id)}
+                                onClick={() => subtractAndRebalance(p.id)}
                                 className="text-[10px] font-bold rounded px-1.5 py-0.5 transition-opacity hover:opacity-80"
                                 style={{
                                   backgroundColor: 'rgba(255,71,87,0.15)',
@@ -945,7 +983,7 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
                                   value=""
                                   onChange={(e) => {
                                     const toTeam = Number(e.target.value);
-                                    if (!isNaN(toTeam)) requestMovePlayer(p.id, i, toTeam);
+                                    if (!isNaN(toTeam)) movePlayer(p.id, i, toTeam);
                                   }}
                                   className="text-[10px] rounded px-1 py-0.5 outline-none"
                                   style={{
@@ -966,7 +1004,7 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
                                   )}
                                 </select>
                                 <button
-                                  onClick={() => requestRemoveFromTeam(p.id, i)}
+                                  onClick={() => removeFromTeam(p.id, i)}
                                   className="text-[10px] font-bold rounded px-1.5 py-0.5 transition-opacity hover:opacity-80"
                                   style={{
                                     backgroundColor: 'rgba(255,71,87,0.15)',
@@ -984,14 +1022,14 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
                       );
                     })}
 
-                    {/* Add player to team (pre-match manual) */}
+                    {/* Add player to team (pre-match surgical, no rebalance) */}
                     {!matchMode && availablePlayers.length > 0 && (
                       <div className="px-4 py-2" style={{ borderTop: '1px solid #1e2e48' }}>
                         <select
                           value=""
                           onChange={(e) => {
                             const pid = Number(e.target.value);
-                            if (!isNaN(pid)) requestAddToTeam(pid, i);
+                            if (!isNaN(pid)) addToTeam(pid, i);
                           }}
                           className="w-full text-xs rounded px-2 py-1.5 outline-none"
                           style={{
@@ -1017,10 +1055,10 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
             })}
           </div>
 
-          {/* Match-mode: Add player & rebalance */}
-          {matchMode && availablePlayers.length > 0 && (
+          {/* Global rebalance controls — visible whenever teams exist */}
+          {teams && (availablePlayers.length > 0 || teams.flat().length > teamCount) && (
             <div
-              className="rounded-lg px-4 py-3 flex flex-col gap-2"
+              className="rounded-lg px-4 py-3 flex flex-col gap-3"
               style={{
                 backgroundColor: '#0c1220',
                 border: '1px solid rgba(46,204,113,0.3)',
@@ -1031,34 +1069,63 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
                   className="text-xs font-bold px-2 py-0.5 rounded"
                   style={{ backgroundColor: 'rgba(46,204,113,0.15)', color: '#2ecc71' }}
                 >
-                  ADD PLAYER
+                  REBALANCE
                 </span>
                 <span className="text-[10px]" style={{ color: '#3d5270' }}>
-                  Teams will auto-rebalance
+                  {matchMode ? 'Teams will auto-rebalance and the change is logged' : 'Teams will auto-rebalance'}
                 </span>
               </div>
-              <select
-                value=""
-                onChange={(e) => {
-                  const pid = Number(e.target.value);
-                  if (!isNaN(pid)) handleMatchAddPlayer(pid);
-                }}
-                className="w-full text-xs rounded px-2 py-1.5 outline-none"
-                style={{
-                  backgroundColor: '#121b2e',
-                  border: '1px solid #1e2e48',
-                  color: '#c8d8ec',
-                }}
-              >
-                <option value="">+ Select player to add...</option>
-                {availablePlayers
-                  .sort((a, b) => a.name.localeCompare(b.name))
-                  .map(p => (
-                    <option key={p.id} value={p.id}>
-                      {p.name} ({p.gender}, {p.elo})
-                    </option>
-                  ))}
-              </select>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {availablePlayers.length > 0 && (
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      const pid = Number(e.target.value);
+                      if (!isNaN(pid)) addAndRebalance(pid);
+                    }}
+                    className="w-full text-xs rounded px-2 py-1.5 outline-none"
+                    style={{
+                      backgroundColor: '#121b2e',
+                      border: '1px solid #1e2e48',
+                      color: '#c8d8ec',
+                    }}
+                  >
+                    <option value="">+ Add player & rebalance…</option>
+                    {availablePlayers
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map(p => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} ({p.gender}, {p.elo})
+                        </option>
+                      ))}
+                  </select>
+                )}
+                {teams.flat().length > teamCount && (
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      const pid = Number(e.target.value);
+                      if (!isNaN(pid)) subtractAndRebalance(pid);
+                    }}
+                    className="w-full text-xs rounded px-2 py-1.5 outline-none"
+                    style={{
+                      backgroundColor: '#121b2e',
+                      border: '1px solid #1e2e48',
+                      color: '#c8d8ec',
+                    }}
+                  >
+                    <option value="">− Remove player & rebalance…</option>
+                    {teams.flat()
+                      .slice()
+                      .sort((a, b) => a.name.localeCompare(b.name))
+                      .map(p => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} ({p.gender}, {p.elo})
+                        </option>
+                      ))}
+                  </select>
+                )}
+              </div>
             </div>
           )}
 
@@ -1152,6 +1219,32 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
               )}
             </div>
           </div>
+
+          {/* Buddy-split warning */}
+          {summary.splitGroups.length > 0 && (
+            <div
+              className="rounded-lg px-4 py-2.5 flex flex-wrap items-center gap-2"
+              style={{
+                backgroundColor: 'rgba(255,71,87,0.08)',
+                border: '1px solid rgba(255,71,87,0.3)',
+              }}
+            >
+              <span
+                className="text-xs font-bold px-2 py-0.5 rounded"
+                style={{ backgroundColor: 'rgba(255,71,87,0.15)', color: '#ff4757' }}
+              >
+                BUDDIES SPLIT
+              </span>
+              {summary.splitGroups.map((label, idx) => (
+                <span key={idx} className="text-xs" style={{ color: '#c8d8ec' }}>
+                  {label}
+                </span>
+              ))}
+              <span className="text-[10px]" style={{ color: '#3d5270' }}>
+                (couldn&apos;t unify — gender or size constraints)
+              </span>
+            </div>
+          )}
 
           {/* Manual changes audit log */}
           {manualChanges.length > 0 && (
@@ -1297,119 +1390,6 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
         </div>
       )}
 
-      {/* Justification modal for manual changes */}
-      {pendingChange && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.7)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: 16,
-          }}
-          onClick={(e) => { if (e.target === e.currentTarget) cancelPendingChange(); }}
-        >
-          <div
-            className="w-full max-w-md rounded-xl flex flex-col gap-4"
-            style={{
-              backgroundColor: '#0c1220',
-              border: '1px solid #1e2e48',
-              padding: 24,
-              boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
-            }}
-          >
-            <div className="flex items-center gap-2">
-              <span
-                className="text-xs font-bold px-2 py-0.5 rounded uppercase"
-                style={{
-                  backgroundColor:
-                    pendingChange.type === 'move' ? 'rgba(0,180,216,0.15)' :
-                    pendingChange.type === 'add' ? 'rgba(46,204,113,0.15)' :
-                    'rgba(255,71,87,0.15)',
-                  color:
-                    pendingChange.type === 'move' ? '#00b4d8' :
-                    pendingChange.type === 'add' ? '#2ecc71' :
-                    '#ff4757',
-                }}
-              >
-                {pendingChange.type}
-              </span>
-              <span className="text-sm font-semibold" style={{ color: '#c8d8ec' }}>
-                Manual Change
-              </span>
-            </div>
-
-            <p className="text-sm" style={{ color: '#c8d8ec' }}>
-              {pendingChange.type === 'move' && (
-                <>Move <strong>{pendingChange.playerName}</strong> from <strong>{pendingChange.fromTeamName}</strong> to <strong>{pendingChange.toTeamName}</strong></>
-              )}
-              {pendingChange.type === 'remove' && (
-                <>Remove <strong>{pendingChange.playerName}</strong> from <strong>{pendingChange.fromTeamName}</strong></>
-              )}
-              {pendingChange.type === 'add' && (
-                <>Add <strong>{pendingChange.playerName}</strong> to <strong>{pendingChange.toTeamName}</strong></>
-              )}
-            </p>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium" style={{ color: '#3d5270' }}>
-                Justification (required)
-              </label>
-              <textarea
-                value={changeReason}
-                onChange={(e) => setChangeReason(e.target.value)}
-                placeholder="Why is this change needed?"
-                rows={3}
-                autoFocus
-                className="w-full px-3 py-2 rounded-lg text-sm outline-none resize-none"
-                style={{
-                  backgroundColor: '#121b2e',
-                  border: '1px solid #1e2e48',
-                  color: '#c8d8ec',
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey && changeReason.trim()) {
-                    e.preventDefault();
-                    confirmPendingChange();
-                  }
-                }}
-              />
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={cancelPendingChange}
-                className="flex-1 py-2.5 rounded-lg text-sm font-bold transition-all"
-                style={{
-                  backgroundColor: 'transparent',
-                  color: '#c8d8ec',
-                  border: '1px solid #1e2e48',
-                }}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmPendingChange}
-                disabled={!changeReason.trim()}
-                className="flex-1 py-2.5 rounded-lg text-sm font-bold transition-all"
-                style={{
-                  backgroundColor: changeReason.trim() ? '#F5C518' : '#1e2e48',
-                  color: changeReason.trim() ? '#070a13' : '#3d5270',
-                  cursor: changeReason.trim() ? 'pointer' : 'not-allowed',
-                }}
-              >
-                Confirm Change
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

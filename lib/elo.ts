@@ -57,16 +57,20 @@ export function expectedScore(eloA: number, eloB: number): number {
 
 export function teamEffectiveElo(
   players: Player[],
-  isSmaller: boolean,
+  contextSizes: number[],
   settings: Settings
 ): number {
   if (!players.length) return settings.baseElo;
   const avg = players.reduce((s, p) => s + p.elo, 0) / players.length;
   const gNet = players.reduce((s, p) => s + (p.gender === 'M' ? 1 : -1), 0) / players.length;
+  const meanSize = contextSizes.length
+    ? contextSizes.reduce((s, n) => s + n, 0) / contextSizes.length
+    : players.length;
+  const sizeDelta = players.length - meanSize;
   return Math.round(
     avg +
     gNet * settings.genderWeight +
-    (isSmaller ? settings.unequalBonus : 0)
+    sizeDelta * settings.rosterDepthBonus
   );
 }
 
@@ -96,11 +100,9 @@ export function applyMatchResults(
   manualChanges: import('@/lib/types').TeamChangeEntry[] = [],
   teamMeta: { name: string; color: string }[] = []
 ): { players: Player[]; session: Session; deltas: Record<string, number> } {
-  // Compute effective ELO per team
-  const minSize = Math.min(...teams.map(t => t.length));
-  const teamElos = teams.map((t) =>
-    teamEffectiveElo(t, t.length < minSize, settings)
-  );
+  // Compute effective ELO per team (size-aware)
+  const teamSizes = teams.map(t => t.length);
+  const teamElos = teams.map((t) => teamEffectiveElo(t, teamSizes, settings));
 
   // Accumulate raw delta per player id
   const deltaMap = new Map<number, number>();
@@ -221,7 +223,7 @@ export function defaultSettings(): Settings {
   return {
     genderWeight: 50,
     genderBalanceWeight: 120,
-    unequalBonus: 30,
+    rosterDepthBonus: 15,
     provGames: 5,
     vetProvGames: 10,
     superVetProvGames: 15,

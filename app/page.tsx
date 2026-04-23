@@ -80,6 +80,54 @@ export default function Home() {
     setState(prev => prev ? { ...prev, nextId } : prev);
   }, []);
 
+  const handleLinkBuddies = useCallback((idA: number, idB: number) => {
+    if (idA === idB) return;
+    setState(prev => {
+      if (!prev) return prev;
+      const pA = prev.players.find(p => p.id === idA);
+      const pB = prev.players.find(p => p.id === idB);
+      if (!pA || !pB) return prev;
+      const gA = pA.buddyGroup;
+      const gB = pB.buddyGroup;
+      if (gA != null && gA === gB) return prev; // already linked
+      if (gA != null && gB != null) {
+        // Merge B's group into A's group
+        const players = prev.players.map(p => p.buddyGroup === gB ? { ...p, buddyGroup: gA } : p);
+        return { ...prev, players };
+      }
+      if (gA != null) {
+        const players = prev.players.map(p => p.id === idB ? { ...p, buddyGroup: gA } : p);
+        return { ...prev, players };
+      }
+      if (gB != null) {
+        const players = prev.players.map(p => p.id === idA ? { ...p, buddyGroup: gB } : p);
+        return { ...prev, players };
+      }
+      // Create new group
+      const newGroup = prev.nextBuddyGroupId;
+      const players = prev.players.map(p =>
+        (p.id === idA || p.id === idB) ? { ...p, buddyGroup: newGroup } : p
+      );
+      return { ...prev, players, nextBuddyGroupId: newGroup + 1 };
+    });
+  }, []);
+
+  const handleUnlinkBuddy = useCallback((id: number) => {
+    setState(prev => {
+      if (!prev) return prev;
+      const player = prev.players.find(p => p.id === id);
+      if (!player || player.buddyGroup == null) return prev;
+      const groupId = player.buddyGroup;
+      let players = prev.players.map(p => p.id === id ? { ...p, buddyGroup: null } : p);
+      // A group of one makes no sense — unlink the lone remaining member too
+      const remaining = players.filter(p => p.buddyGroup === groupId);
+      if (remaining.length === 1) {
+        players = players.map(p => p.id === remaining[0].id ? { ...p, buddyGroup: null } : p);
+      }
+      return { ...prev, players };
+    });
+  }, []);
+
   const handleUpdateSettings = useCallback((settings: Settings) => {
     setState(prev => prev ? { ...prev, settings } : prev);
   }, []);
@@ -162,6 +210,7 @@ export default function Home() {
     const fresh: AppState = {
       players: seedPlayers,
       nextId: seedPlayers.length + 1,
+      nextBuddyGroupId: 1,
       settings: defaultSettings(),
       sessions: [],
     };
@@ -228,6 +277,8 @@ export default function Home() {
           onRenamePlayer={handleRenamePlayer}
           nextId={state.nextId}
           onUpdateNextId={handleUpdateNextId}
+          onLinkBuddies={handleLinkBuddies}
+          onUnlinkBuddy={handleUnlinkBuddy}
         />
       )}
       {activeTab === 'teams' && (

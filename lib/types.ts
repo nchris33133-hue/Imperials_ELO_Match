@@ -20,6 +20,8 @@ export interface Player {
   prevRank: number | null;
   /** Consecutive sessions attended (resets to 0 if player misses a session) */
   streak: number;
+  /** Shared ID for players who want to be placed on the same team. null = no buddies. */
+  buddyGroup: number | null;
 }
 
 export interface TeamChangeEntry {
@@ -56,7 +58,8 @@ export interface Session {
 export interface Settings {
   genderWeight: number;
   genderBalanceWeight: number;
-  unequalBonus: number;
+  /** ELO added per extra player above the mean team size. Bigger roster = higher effective ELO. */
+  rosterDepthBonus: number;
   provGames: number;
   vetProvGames: number;
   superVetProvGames: number;
@@ -68,6 +71,7 @@ export interface Settings {
 export interface AppState {
   players: Player[];
   nextId: number;
+  nextBuddyGroupId: number;
   settings: Settings;
   sessions: Session[];
 }

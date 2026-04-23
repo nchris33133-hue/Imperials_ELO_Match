@@ -45,12 +45,12 @@ const SECTIONS: { title: string; settings: SettingDef[] }[] = [
         max: 500,
       },
       {
-        key: 'unequalBonus',
-        label: 'Unequal Bonus',
+        key: 'rosterDepthBonus',
+        label: 'Roster Depth Bonus',
         description:
-          'Bonus applied when teams have unequal sizes to compensate for the disadvantage.',
+          'ELO added per extra player above the mean team size. Makes bigger rosters count as stronger — the balancer compensates by placing lower-ELO players there.',
         min: 0,
-        max: 100,
+        max: 60,
       },
     ],
   },

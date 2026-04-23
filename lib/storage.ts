@@ -19,6 +19,7 @@ function migratePlayerFields(p: any): Partial<Player> {
     lms: p.lms ?? 0,
     prevRank: p.prevRank ?? null,
     streak: p.streak ?? 0,
+    buddyGroup: p.buddyGroup ?? null,
   };
 }
 
@@ -59,13 +60,26 @@ function applySeedMerge(players: Player[], seedPlayers: Player[]): Player[] {
   return merged;
 }
 
+function migrateSettings(loadedSettings: any): any {
+  const s = { ...(loadedSettings ?? {}) };
+  // unequalBonus (flat bonus on smaller team) → rosterDepthBonus (per-player gap)
+  if (s.unequalBonus !== undefined && s.rosterDepthBonus === undefined) {
+    s.rosterDepthBonus = Math.round(s.unequalBonus / 2);
+  }
+  delete s.unequalBonus;
+  return s;
+}
+
 function buildState(loaded: any, seedPlayers: Player[]): AppState {
   let players = migratePlayers(loaded, seedPlayers);
   players = applySeedMerge(players, seedPlayers);
+  // Derive nextBuddyGroupId: max existing group + 1 (or 1 if none)
+  const maxGroup = players.reduce((m: number, p: Player) => (p.buddyGroup ?? 0) > m ? p.buddyGroup! : m, 0);
   return {
     players,
     nextId: loaded.nextId ?? seedPlayers.length + 1,
-    settings: { ...defaultSettings(), ...(loaded.settings ?? {}) },
+    nextBuddyGroupId: loaded.nextBuddyGroupId ?? maxGroup + 1,
+    settings: { ...defaultSettings(), ...migrateSettings(loaded.settings) },
     sessions: loaded.sessions ?? [],
   };
 }
@@ -74,6 +88,7 @@ function defaultState(seedPlayers: Player[]): AppState {
   return {
     players: seedPlayers,
     nextId: seedPlayers.length + 1,
+    nextBuddyGroupId: 1,
     settings: defaultSettings(),
     sessions: [],
   };
