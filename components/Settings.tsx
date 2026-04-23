@@ -1,7 +1,56 @@
 'use client';
 
+import { useState } from 'react';
 import type { Player, Settings } from '@/lib/types';
 import { downloadRankingsXLSX } from '@/lib/export';
+
+interface ChangelogEntry {
+  date: string;
+  groups: { title: string; bullets: string[] }[];
+}
+
+const CHANGELOG: ChangelogEntry[] = [
+  {
+    date: 'April 23, 2026',
+    groups: [
+      {
+        title: 'Points',
+        bullets: [
+          'Bonus Points (BP) now count toward your total Pts. Historical scores have been rolled up automatically, so the Pts column includes BP from past sessions.',
+          'The "Gain" column shows the full session total (placement + BP), not placement alone.',
+        ],
+      },
+      {
+        title: 'Roster',
+        bullets: [
+          'New Newb starting class at 900 ELO. Use it for brand-new players so their rating can climb quickly.',
+        ],
+      },
+      {
+        title: 'Team balancing',
+        bullets: [
+          'Buddy groups — pair players who want to be on the same team. The BUDDIES panel lives at the top of the Teams tab. Selecting one buddy toggles the whole group.',
+          'Size-aware balancing: uneven teams (e.g. 5 vs 6) are no longer matched on average ELO alone. The bigger roster counts as slightly stronger and the smaller team gets higher-rated players to compensate. Tune with Roster Depth Bonus below.',
+          'A BUDDIES SPLIT warning appears when the balancer couldn’t keep a group together (usually a gender or team-size constraint).',
+        ],
+      },
+      {
+        title: 'Editing teams',
+        bullets: [
+          'Moving, adding, or removing players pre-match no longer asks for a reason — changes are instant.',
+          'New Add & Rebalance / Remove & Rebalance dropdowns appear whenever teams exist. Swap a player in or out with one click and the algorithm redoes the balance.',
+          'In match mode, per-player ✕ still auto-rebalances and records the change to session history.',
+        ],
+      },
+      {
+        title: 'Persistence',
+        bullets: [
+          'Selected players and team count survive a browser refresh. They reset only when you record a match.',
+        ],
+      },
+    ],
+  },
+];
 
 interface SettingsProps {
   settings: Settings;
@@ -118,6 +167,92 @@ const SECTIONS: { title: string; settings: SettingDef[] }[] = [
   },
 ];
 
+function ChangelogSection() {
+  const [expanded, setExpanded] = useState(true);
+  return (
+    <div
+      style={{
+        background: '#0c1220',
+        border: '1px solid #1e2e48',
+        borderRadius: 10,
+        padding: '18px 20px',
+      }}
+    >
+      <button
+        onClick={() => setExpanded(e => !e)}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          width: '100%',
+          background: 'transparent',
+          border: 0,
+          padding: 0,
+          cursor: 'pointer',
+          marginBottom: expanded ? 14 : 0,
+          paddingBottom: expanded ? 8 : 0,
+          borderBottom: expanded ? '1px solid #1e2e48' : 'none',
+        }}
+      >
+        <span
+          style={{
+            fontSize: 14,
+            fontWeight: 700,
+            color: '#F5C518',
+            textTransform: 'uppercase',
+            letterSpacing: 1,
+          }}
+        >
+          What’s New
+        </span>
+        <span style={{ color: '#3d5270', fontSize: 12 }}>
+          {expanded ? 'Hide ▲' : 'Show ▼'}
+        </span>
+      </button>
+
+      {expanded && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
+          {CHANGELOG.map(entry => (
+            <div key={entry.date} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: '#9eb4cc',
+                  letterSpacing: 0.5,
+                }}
+              >
+                {entry.date}
+              </div>
+              {entry.groups.map(group => (
+                <div key={group.title} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#F5C518' }}>
+                    {group.title}
+                  </div>
+                  <ul
+                    style={{
+                      margin: 0,
+                      paddingLeft: 18,
+                      color: '#c8d8ec',
+                      fontSize: 13,
+                      lineHeight: 1.55,
+                      listStyleType: 'disc',
+                    }}
+                  >
+                    {group.bullets.map((b, i) => (
+                      <li key={i} style={{ marginBottom: 3 }}>{b}</li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const inputStyle: React.CSSProperties = {
   width: 72,
   padding: '6px 8px',
@@ -177,6 +312,8 @@ export default function SettingsPanel({
         color: '#c8d8ec',
       }}
     >
+      <ChangelogSection />
+
       {SECTIONS.map((section) => (
         <div key={section.title}>
           <h3
