@@ -39,9 +39,11 @@ interface TeamBuilderProps {
   settings: Settings;
   onRecordMatch: (updatedPlayers: Player[], session: Session) => void;
   sessionCount: number;
+  onLinkBuddies: (idA: number, idB: number) => void;
+  onUnlinkBuddy: (id: number) => void;
 }
 
-export default function TeamBuilder({ players, settings, onRecordMatch, sessionCount }: TeamBuilderProps) {
+export default function TeamBuilder({ players, settings, onRecordMatch, sessionCount, onLinkBuddies, onUnlinkBuddy }: TeamBuilderProps) {
   const [search, setSearch] = useState('');
   const [teamCount, setTeamCount] = useState(2);
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -60,6 +62,10 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
 
   // Audit log for auto-rebalance events during match mode (preserved in session for rollback context)
   const [manualChanges, setManualChanges] = useState<TeamChangeEntry[]>([]);
+
+  // New-pair dropdowns for Buddy Groups panel
+  const [pairA, setPairA] = useState<string>('');
+  const [pairB, setPairB] = useState<string>('');
 
   // Track whether we've restored from localStorage already
   const restoredRef = useRef(false);
@@ -515,6 +521,113 @@ export default function TeamBuilder({ players, settings, onRecordMatch, sessionC
                 {n}
               </button>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Buddy Groups panel */}
+      {!matchMode && (
+        <div
+          className="rounded-lg px-4 py-3 flex flex-col gap-3"
+          style={{ backgroundColor: '#0c1220', border: '1px solid #1e2e48' }}
+        >
+          <div className="flex items-center gap-2">
+            <span
+              className="text-xs font-bold px-2 py-0.5 rounded"
+              style={{ backgroundColor: 'rgba(245,197,24,0.15)', color: '#F5C518' }}
+            >
+              BUDDIES
+            </span>
+            <span className="text-[10px]" style={{ color: '#3d5270' }}>
+              Pair players who want to be on the same team
+            </span>
+          </div>
+
+          {/* Existing groups */}
+          {groupMembers.size > 0 && (
+            <div className="flex flex-col gap-1.5">
+              {[...groupMembers.entries()].map(([gid, members]) => (
+                <div key={gid} className="flex flex-wrap items-center gap-1.5">
+                  {members.map(m => (
+                    <span
+                      key={m.id}
+                      className="inline-flex items-center gap-1 text-[11px] rounded px-1.5 py-0.5"
+                      style={{
+                        backgroundColor: 'rgba(245,197,24,0.12)',
+                        color: '#F5C518',
+                        border: '1px solid rgba(245,197,24,0.3)',
+                      }}
+                    >
+                      {m.name}
+                      <button
+                        onClick={() => onUnlinkBuddy(m.id)}
+                        className="text-[10px] leading-none opacity-70 hover:opacity-100"
+                        style={{ color: '#F5C518', background: 'transparent', border: 0, cursor: 'pointer' }}
+                        aria-label={`Unlink ${m.name}`}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* New-pair row */}
+          <div className="flex flex-wrap items-center gap-2">
+            <select
+              value={pairA}
+              onChange={e => setPairA(e.target.value)}
+              className="text-xs rounded px-2 py-1.5 outline-none"
+              style={{
+                backgroundColor: '#121b2e',
+                border: '1px solid #1e2e48',
+                color: '#c8d8ec',
+                minWidth: 160,
+              }}
+            >
+              <option value="">Player A…</option>
+              {[...players].sort((a, b) => a.name.localeCompare(b.name)).map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+            <span className="text-xs" style={{ color: '#3d5270' }}>+</span>
+            <select
+              value={pairB}
+              onChange={e => setPairB(e.target.value)}
+              className="text-xs rounded px-2 py-1.5 outline-none"
+              style={{
+                backgroundColor: '#121b2e',
+                border: '1px solid #1e2e48',
+                color: '#c8d8ec',
+                minWidth: 160,
+              }}
+            >
+              <option value="">Player B…</option>
+              {[...players].sort((a, b) => a.name.localeCompare(b.name)).map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => {
+                const a = Number(pairA);
+                const b = Number(pairB);
+                if (!a || !b || a === b) return;
+                onLinkBuddies(a, b);
+                setPairA('');
+                setPairB('');
+              }}
+              disabled={!pairA || !pairB || pairA === pairB}
+              className="text-xs font-bold rounded px-3 py-1.5 transition-all"
+              style={{
+                backgroundColor: pairA && pairB && pairA !== pairB ? '#F5C518' : '#1e2e48',
+                color: pairA && pairB && pairA !== pairB ? '#070a13' : '#3d5270',
+                cursor: pairA && pairB && pairA !== pairB ? 'pointer' : 'not-allowed',
+              }}
+            >
+              Link
+            </button>
           </div>
         </div>
       )}

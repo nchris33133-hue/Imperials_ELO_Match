@@ -1,75 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import type { Player, Settings } from '@/lib/types';
-
-interface BuddyCellProps {
-  player: Player;
-  players: Player[];
-  groupMembers: Map<number, Player[]>;
-  onLink: (idA: number, idB: number) => void;
-  onUnlink: (id: number) => void;
-}
-
-function BuddyCell({ player, players, groupMembers, onLink, onUnlink }: BuddyCellProps) {
-  const buddies = player.buddyGroup != null
-    ? (groupMembers.get(player.buddyGroup) ?? []).filter(p => p.id !== player.id)
-    : [];
-  const groupSet = new Set(buddies.map(b => b.id).concat(player.id));
-  // Linkable: any other player not already in this player's group
-  const linkable = players
-    .filter(p => !groupSet.has(p.id))
-    .sort((a, b) => a.name.localeCompare(b.name));
-
-  return (
-    <div className="flex flex-wrap gap-1 items-center">
-      {buddies.map(b => (
-        <span
-          key={b.id}
-          className="inline-flex items-center gap-1 text-[11px] rounded px-1.5 py-0.5"
-          style={{
-            backgroundColor: 'rgba(245,197,24,0.12)',
-            color: '#F5C518',
-            border: '1px solid rgba(245,197,24,0.3)',
-          }}
-          title={`Buddy — click × to unlink ${b.name}`}
-        >
-          {b.name}
-          <button
-            onClick={() => onUnlink(b.id)}
-            className="ml-0.5 text-[10px] leading-none opacity-70 hover:opacity-100"
-            style={{ color: '#F5C518', background: 'transparent', border: 0, cursor: 'pointer' }}
-            aria-label={`Unlink ${b.name}`}
-          >
-            ×
-          </button>
-        </span>
-      ))}
-      {linkable.length > 0 && (
-        <select
-          value=""
-          onChange={(e) => {
-            const bid = Number(e.target.value);
-            if (!isNaN(bid)) onLink(player.id, bid);
-          }}
-          className="text-[11px] rounded px-1.5 py-0.5 outline-none"
-          style={{
-            backgroundColor: '#121b2e',
-            border: '1px solid #1e2e48',
-            color: '#3d5270',
-            minWidth: 90,
-          }}
-          title={buddies.length ? 'Add to buddy group' : 'Pair with another player'}
-        >
-          <option value="">+ Buddy</option>
-          {linkable.map(p => (
-            <option key={p.id} value={p.id}>{p.name}</option>
-          ))}
-        </select>
-      )}
-    </div>
-  );
-}
 
 interface RosterProps {
   players: Player[];
@@ -78,8 +10,6 @@ interface RosterProps {
   onRenamePlayer: (oldName: string, newName: string) => void;
   nextId: number;
   onUpdateNextId: (id: number) => void;
-  onLinkBuddies: (idA: number, idB: number) => void;
-  onUnlinkBuddy: (id: number) => void;
 }
 
 export default function Roster({
@@ -89,26 +19,12 @@ export default function Roster({
   onRenamePlayer,
   nextId,
   onUpdateNextId,
-  onLinkBuddies,
-  onUnlinkBuddy,
 }: RosterProps) {
   const [name, setName] = useState('');
   const [gender, setGender] = useState<'M' | 'F'>('M');
   const [vetLevel, setVetLevel] = useState<0 | 1 | 2>(0);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState('');
-
-  // Map of group id -> member players (for fast buddy lookups)
-  const groupMembers = useMemo(() => {
-    const m = new Map<number, Player[]>();
-    for (const p of players) {
-      if (p.buddyGroup == null) continue;
-      const list = m.get(p.buddyGroup) ?? [];
-      list.push(p);
-      m.set(p.buddyGroup, list);
-    }
-    return m;
-  }, [players]);
 
   const eloMap: Record<0 | 1 | 2, number> = {
     0: settings.baseElo,
@@ -306,7 +222,7 @@ export default function Roster({
           <table className="w-full text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid #1e2e48' }}>
-                {['Name', 'Gender', 'Veteran Level', 'ELO', 'Games', 'Buddies', ''].map(
+                {['Name', 'Gender', 'Veteran Level', 'ELO', 'Games', ''].map(
                   (header) => (
                     <th
                       key={header || 'actions'}
@@ -408,15 +324,6 @@ export default function Roster({
                   <td className="px-4 py-3" style={{ color: '#c8d8ec' }}>
                     {player.games}
                   </td>
-                  <td className="px-4 py-3">
-                    <BuddyCell
-                      player={player}
-                      players={players}
-                      groupMembers={groupMembers}
-                      onLink={onLinkBuddies}
-                      onUnlink={onUnlinkBuddy}
-                    />
-                  </td>
                   <td className="px-4 py-3 text-right">
                     <button
                       onClick={() => handleDelete(player.id)}
@@ -435,7 +342,7 @@ export default function Roster({
               {sortedPlayers.length === 0 && (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={6}
                     className="px-4 py-8 text-center"
                     style={{ color: '#3d5270' }}
                   >
@@ -527,15 +434,6 @@ export default function Roster({
                 <option value={1}>Veteran</option>
                 <option value={2}>Super Veteran</option>
               </select>
-            </div>
-            <div className="mt-2">
-              <BuddyCell
-                player={player}
-                players={players}
-                groupMembers={groupMembers}
-                onLink={onLinkBuddies}
-                onUnlink={onUnlinkBuddy}
-              />
             </div>
           </div>
         ))}

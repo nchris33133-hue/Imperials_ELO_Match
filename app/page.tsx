@@ -277,8 +277,6 @@ export default function Home() {
           onRenamePlayer={handleRenamePlayer}
           nextId={state.nextId}
           onUpdateNextId={handleUpdateNextId}
-          onLinkBuddies={handleLinkBuddies}
-          onUnlinkBuddy={handleUnlinkBuddy}
         />
       )}
       {activeTab === 'teams' && (
@@ -287,6 +285,8 @@ export default function Home() {
           settings={state.settings}
           onRecordMatch={handleRecordMatch}
           sessionCount={allSessions.length}
+          onLinkBuddies={handleLinkBuddies}
+          onUnlinkBuddy={handleUnlinkBuddy}
         />
       )}
       {activeTab === 'history' && (
